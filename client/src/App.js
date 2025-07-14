@@ -30,59 +30,84 @@ export default App;
 
 // React 앱 메인
 
-import React, { useEffect, useState } from "react";
+// client/src/App.js
+
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 function App() {
     const [students, setStudents] = useState([]);
-    const [name, setName] = useState("");
-    const [phone, setPhone] = useState("");
-    const [school, setSchool] = useState("");
+    const [newStudent, setNewStudent] = useState({
+        name: '',
+        phone: '',
+        school: '',
+    });
 
     useEffect(() => {
-        fetch("/api/students")
-            .then((res) => res.json())
-            .then((data) => setStudents(data))
-            .catch((err) => console.error("불러오기 실패:", err));
+        fetchStudents();
     }, []);
 
-    const handleAddStudent = async (e) => {
-        e.preventDefault();
-        const newStudent = { name, phone, school };
+    const fetchStudents = async () => {
+        try {
+            const response = await axios.get('/api/students');
+            setStudents(response.data);
+        } catch (error) {
+            console.error('학생 데이터를 불러오는 중 오류 발생:', error);
+        }
+    };
 
-        const res = await fetch("/api/students", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newStudent),
-        });
+    const handleInputChange = (e) => {
+        setNewStudent({ ...newStudent, [e.target.name]: e.target.value });
+    };
 
-        if (res.ok) {
-            const result = await res.json();
-            console.log("추가된 학생:", result);
-            setStudents([...students, result]); // 화면 즉시 반영
-            setName(""); setPhone(""); setSchool("");
-        } else {
-            console.error("추가 실패");
+    const addStudent = async () => {
+        const { name, phone, school } = newStudent;
+        if (!name || !phone || !school)
+            return alert('모든 정보를 입력해주세요.');
+
+        try {
+            await axios.post('/api/students', newStudent);
+            setNewStudent({ name: '', phone: '', school: '' });
+            fetchStudents(); // 새로고침
+        } catch (error) {
+            console.error('학생 추가 중 오류 발생:', error);
         }
     };
 
     return (
-        <div style={{ padding: "20px" }}>
+        <div style={{ padding: '20px' }}>
             <h1>학생 목록</h1>
             <ul>
-                {students.map((s) => (
-                    <li key={s.id}>
-                        {s.name} - {s.phone} - {s.school}
+                {students.map((student, idx) => (
+                    <li key={idx}>
+                        {student.name} - {student.phone} - {student.school}
                     </li>
                 ))}
             </ul>
 
             <h2>학생 추가</h2>
-            <form onSubmit={handleAddStudent}>
-                <input placeholder="이름" value={name} onChange={(e) => setName(e.target.value)} />
-                <input placeholder="전화번호" value={phone} onChange={(e) => setPhone(e.target.value)} />
-                <input placeholder="학교" value={school} onChange={(e) => setSchool(e.target.value)} />
-                <button type="submit">추가</button>
-            </form>
+            <input
+                type="text"
+                name="name"
+                placeholder="이름"
+                value={newStudent.name}
+                onChange={handleInputChange}
+            />
+            <input
+                type="text"
+                name="phone"
+                placeholder="전화번호"
+                value={newStudent.phone}
+                onChange={handleInputChange}
+            />
+            <input
+                type="text"
+                name="school"
+                placeholder="학교"
+                value={newStudent.school}
+                onChange={handleInputChange}
+            />
+            <button onClick={addStudent}>추가</button>
         </div>
     );
 }
