@@ -5,9 +5,7 @@ const AttendancePage = () => {
     const [selectedClass, setSelectedClass] = useState('일 대찬 1400-1700');
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
     const [students, setStudents] = useState([]);
-    const [absentList, setAbsentList] = useState([]);
 
-    // 예시 데이터
     const dummyStudentList = [
         { id: 1, name: '김결석', phone: '010-1234-5678', school: '결석고', isPresent: true },
         { id: 2, name: '이학생', phone: '010-2222-3333', school: '출석중', isPresent: true },
@@ -15,11 +13,9 @@ const AttendancePage = () => {
     ];
 
     useEffect(() => {
-        // 여기에 API 호출 대신 더미 데이터 사용
         setStudents(dummyStudentList);
-    }, []);
+    }, [selectedClass]);
 
-    // 출석 변경 시 호출
     const toggleAttendance = (id) => {
         const updated = students.map(student =>
             student.id === id ? { ...student, isPresent: !student.isPresent } : student
@@ -27,10 +23,35 @@ const AttendancePage = () => {
         setStudents(updated);
     };
 
-    // 일괄 출석 처리
     const markAllPresent = () => {
         const updated = students.map(student => ({ ...student, isPresent: true }));
         setStudents(updated);
+    };
+
+    const handleSave = async () => {
+        const attendanceRecords = students.map(s => ({
+            class_name: selectedClass,
+            date: selectedDate,
+            student_name: s.name,
+            phone: s.phone,
+            school: s.school,
+            status: s.isPresent ? '출석' : '결석'
+        }));
+
+        try {
+            const response = await fetch('/api/attendance/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ records: attendanceRecords })
+            });
+
+            if (!response.ok) throw new Error('저장 실패');
+
+            alert('출결 정보 저장 완료!');
+        } catch (err) {
+            console.error('저장 오류:', err);
+            alert('저장 중 오류 발생!');
+        }
     };
 
     const total = students.length;
@@ -118,7 +139,7 @@ const AttendancePage = () => {
 
                 <div className="button-row">
                     <button onClick={markAllPresent}>일괄 출석</button>
-                    <button>저장</button>
+                    <button onClick={handleSave}>저장</button>
                 </div>
             </div>
         </div>
