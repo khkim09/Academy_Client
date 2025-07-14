@@ -1,0 +1,100 @@
+.attendance-container {
+    display: flex;
+    height: calc(100vh - 70px);
+    background-color: #f5f8fc;
+}
+
+.attendance-left {
+    flex: 3;
+    padding: 20px;
+}
+
+.attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.attendance-table th,
+.attendance-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+.attendance-table th {
+    background-color: #11476c;
+    color: white;
+}
+
+.attendance-right {
+    flex: 2;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-left: 1px solid #ccc;
+}
+
+.top-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.stats-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.stats-row>div {
+    flex: 1;
+}
+
+.count {
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.absent-list-box {
+    border: 1px solid #aaa;
+    flex: 1;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.absent-list-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.absent-list-content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.absent-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+}
+
+.button-row {
+    display: flex;
+    justify-content: space-around;
+}
+
+.button-row button {
+    width: 100px;
+    padding: 8px;
+    font-size: 15px;
+}
