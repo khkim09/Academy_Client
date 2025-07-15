@@ -1,30 +1,42 @@
 .attendance-container {
     display: flex;
     height: calc(100vh - 70px);
+    /* Adjust based on your layout's header height */
     background-color: #f5f8fc;
 }
 
 .attendance-left {
     flex: 3;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
 }
 
 .attendance-table {
     width: 100%;
     border-collapse: collapse;
     background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .attendance-table th,
 .attendance-table td {
     border: 1px solid #ddd;
-    padding: 10px;
+    padding: 12px;
     text-align: center;
+    font-size: 15px;
 }
 
 .attendance-table th {
     background-color: #11476c;
     color: white;
+    font-weight: 600;
+}
+
+.attendance-table td input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
 }
 
 .attendance-right {
@@ -33,43 +45,64 @@
     display: flex;
     flex-direction: column;
     background: white;
-    border-left: 1px solid #ccc;
+    border-left: 1px solid #e0e0e0;
 }
 
-.top-row {
+.class-controls {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
 }
 
+.class-controls select,
+.class-controls input {
+    padding: 8px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex: 1;
+}
+
 .stats-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
     margin-bottom: 20px;
     text-align: center;
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 5px;
 }
 
 .stats-row>div {
     flex: 1;
+    font-size: 16px;
+    color: #555;
 }
 
 .count {
     font-weight: bold;
-    font-size: 20px;
+    font-size: 24px;
+    margin-top: 5px;
+    color: #11476c;
 }
 
 .absent-list-box {
-    border: 1px solid #aaa;
+    border: 1px solid #ccc;
+    border-radius: 5px;
     flex: 1;
-    padding: 10px;
+    padding: 15px;
     display: flex;
     flex-direction: column;
     margin-bottom: 20px;
+    min-height: 150px;
 }
 
 .absent-list-title {
     font-weight: bold;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    font-size: 16px;
 }
 
 .absent-list-content {
@@ -77,24 +110,61 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 .absent-row {
     display: flex;
     justify-content: space-between;
-    padding: 4px 8px;
-    font-size: 14px;
-    border-bottom: 1px solid #eee;
+    padding: 6px 8px;
+    font-size: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.absent-row:last-child {
+    border-bottom: none;
+}
+
+.absent-row span:first-child {
+    font-weight: bold;
 }
 
 .button-row {
     display: flex;
     justify-content: space-around;
+    gap: 15px;
 }
 
 .button-row button {
-    width: 100px;
-    padding: 8px;
-    font-size: 15px;
+    flex: 1;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.button-row button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.button-row button:first-child:not(:disabled) {
+    background-color: #28a745;
+    color: white;
+}
+
+.button-row button:first-child:not(:disabled):hover {
+    background-color: #218838;
+}
+
+.button-row button:last-child {
+    background-color: #007bff;
+    color: white;
+}
+
+.button-row button:last-child:hover {
+    background-color: #0069d9;
 }

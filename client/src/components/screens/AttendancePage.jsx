@@ -10,15 +10,13 @@ const AttendancePage = () => {
     const [students, setStudents] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // 분반 목록 불러오기
     useEffect(() => {
         const fetchClasses = async () => {
             try {
                 const response = await axios.get('/api/attendance/classes');
-                setClasses(response.data);
-                if (response.data.length > 0) {
-                    setSelectedClass(response.data[0]); // 첫 번째 분반을 기본값으로 설정
-                }
+                const classList = ['전체 분반', ...response.data];
+                setClasses(classList);
+                setSelectedClass(classList[0]); // 기본으로 '전체 분반' 선택
             } catch (error) {
                 console.error('분반 목록 로딩 실패:', error);
                 alert('분반 목록을 불러오는 데 실패했습니다.');
@@ -27,71 +25,61 @@ const AttendancePage = () => {
         fetchClasses();
     }, []);
 
-    // 출결 데이터 불러오기
     useEffect(() => {
         if (!selectedClass || !selectedDate) return;
 
-        const fetchData = async () => {
+        const fetchAttendanceData = async () => {
             setIsLoading(true);
             try {
                 const response = await axios.get('/api/attendance/get', {
-                    params: {
-                        class_name: selectedClass,
-                        date: selectedDate
-                    }
+                    params: { class_name: selectedClass, date: selectedDate }
                 });
-                const loadedStudents = response.data.map((record, idx) => ({
-                    id: idx + 1,
+                const loadedStudents = response.data.map((record) => ({
+                    id: `${record.class_name}-${record.phone}`, // 분반명+전화번호로 고유 키 생성
                     name: record.student_name,
                     phone: record.phone,
                     school: record.school,
+                    className: record.class_name,
                     isPresent: record.status === '출석'
                 }));
                 setStudents(loadedStudents);
             } catch (error) {
                 console.error('출결 정보 로딩 실패:', error);
-                alert('출결 정보를 불러오는 데 실패했습니다.');
-                setStudents([]); // 오류 발생 시 학생 목록 비움
+                setStudents([]); // 오류 발생 시 목록 비우기
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchData();
+        fetchAttendanceData();
     }, [selectedClass, selectedDate]);
 
     const toggleAttendance = (id) => {
-        const updatedStudents = students.map(student =>
-            student.id === id ? { ...student, isPresent: !student.isPresent } : student
-        );
-        setStudents(updatedStudents);
+        setStudents(students.map(s => s.id === id ? { ...s, isPresent: !s.isPresent } : s));
     };
 
     const markAllPresent = () => {
-        const updatedStudents = students.map(student => ({ ...student, isPresent: true }));
-        setStudents(updatedStudents);
+        setStudents(students.map(s => ({ ...s, isPresent: true })));
     };
 
     const handleSave = async () => {
-        const attendanceRecords = students.map(s => ({
-            class_name: selectedClass,
+        // [수정된 부분] 서버로 보낼 데이터를 더 간결하게 수정
+        const records = students.map(s => ({
+            class_name: s.className,
             date: selectedDate,
             student_name: s.name,
-            phone: s.phone,
-            school: s.school,
+            phone: s.phone, // 식별자로 phone 사용
             status: s.isPresent ? '출석' : '결석'
         }));
 
         try {
-            await axios.post('/api/attendance/save', { records: attendanceRecords });
+            await axios.post('/api/attendance/save', { records });
             alert('출결 정보가 성공적으로 저장되었습니다!');
         } catch (err) {
-            console.error('저장 오류:', err);
-            alert(`저장 중 오류가 발생했습니다: ${err.response?.data?.error || err.message}`);
+            alert(`저장 실패: ${err.response?.data?.error || err.message}`);
         }
     };
 
-    // 출결 현황 계산
     const attendanceStats = useMemo(() => {
         const total = students.length;
         const present = students.filter(s => s.isPresent).length;
@@ -100,6 +88,8 @@ const AttendancePage = () => {
         return { total, present, absent, absentStudents };
     }, [students]);
 
+    const isAllClassesView = selectedClass === '전체 분반';
+
     return (
         <div className="attendance-container">
             <div className="attendance-left">
@@ -107,6 +97,7 @@ const AttendancePage = () => {
                     <thead>
                         <tr>
                             <th>번호</th>
+                            {isAllClassesView && <th>분반</th>}
                             <th>이름</th>
                             <th>전화번호</th>
                             <th>학교</th>
@@ -115,11 +106,12 @@ const AttendancePage = () => {
                     </thead>
                     <tbody>
                         {isLoading ? (
-                            <tr><td colSpan="5" style={{ textAlign: 'center' }}>로딩 중...</td></tr>
+                            <tr><td colSpan={isAllClassesView ? 6 : 5}>로딩 중...</td></tr>
                         ) : students.length > 0 ? (
                             students.map((student, idx) => (
                                 <tr key={student.id}>
                                     <td>{idx + 1}</td>
+                                    {isAllClassesView && <td>{student.className}</td>}
                                     <td>{student.name}</td>
                                     <td>{student.phone}</td>
                                     <td>{student.school}</td>
@@ -133,44 +125,38 @@ const AttendancePage = () => {
                                 </tr>
                             ))
                         ) : (
-                            <tr><td colSpan="5" style={{ textAlign: 'center' }}>해당 조건의 출결 데이터가 없습니다.</td></tr>
+                            <tr><td colSpan={isAllClassesView ? 6 : 5}>학생 명단에 등록된 학생이 없습니다.</td></tr>
                         )}
                     </tbody>
                 </table>
             </div>
             <div className="attendance-right">
-                <div className="top-row">
-                    <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} style={{ flex: 1 }}>
-                        {classes.length > 0 ? (
-                            classes.map(cls => <option key={cls} value={cls}>{cls}</option>)
-                        ) : (
-                            <option>불러올 분반 없음</option>
-                        )}
+                <div className="class-controls">
+                    <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
+                        {classes.map(cls => <option key={cls} value={cls}>{cls}</option>)}
                     </select>
                     <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
                 </div>
+
                 <div className="stats-row">
                     <div>총원<div className="count">{attendanceStats.total}</div></div>
                     <div>출석<div className="count">{attendanceStats.present}</div></div>
                     <div>결석<div className="count">{attendanceStats.absent}</div></div>
                 </div>
+
                 <div className="absent-list-box">
                     <div className="absent-list-title">결석자 목록</div>
                     <div className="absent-list-content">
-                        {attendanceStats.absentStudents.length > 0 ? (
-                            attendanceStats.absentStudents.map(student => (
-                                <div key={student.id} className="absent-row">
-                                    <span>{student.name}</span>
-                                    <span>{student.school}</span>
-                                </div>
-                            ))
-                        ) : (
-                            <div style={{ textAlign: 'center', color: '#888', paddingTop: '20px' }}>결석자가 없습니다.</div>
-                        )}
+                        {attendanceStats.absentStudents.map(s => (
+                            <div key={s.id} className="absent-row">
+                                <span>{s.name} {isAllClassesView && `(${s.className.split(' ')[1]})`}</span>
+                                <span>{s.school}</span>
+                            </div>
+                        ))}
                     </div>
                 </div>
                 <div className="button-row">
-                    <button onClick={markAllPresent}>일괄 출석</button>
+                    <button onClick={markAllPresent} disabled={isAllClassesView}>일괄 출석</button>
                     <button onClick={handleSave}>저장</button>
                 </div>
             </div>
