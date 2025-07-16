@@ -1,67 +1,64 @@
-// src/components/layout/MainLayout.jsx
-
-import React, { useState } from 'react';
-import Sidebar from './Sidebar';
-import TabBar from './TabBar';
-import '../layout/MainLayout.css'; // ✅ 올바른 CSS 적용
+import React from 'react';
+import { useTabs } from '../../contexts/TabContext';
+import './MainLayout.css';
 
 import AttendancePage from '../screens/AttendancePage';
 import ScoreInputPage from '../screens/ScoreInputPage';
-import ScoreViewPage from '../screens/ScoreViewPage';
-import WrongAnswerNotePage from '../screens/WrongAnswerNotePage';
 
-// 메뉴 이름과 해당 컴포넌트 매핑
-const MENU_COMPONENTS = {
-    학사관리: AttendancePage,
-    성적입력: ScoreInputPage,
-    성적조회: ScoreViewPage,
-    오답노트: WrongAnswerNotePage,
+// 페이지 컴포넌트를 미리 매핑해둡니다.
+const pageComponents = {
+    attendance: <AttendancePage />,
+    scores: <ScoreInputPage />,
 };
 
-function MainLayout() {
-    const [tabs, setTabs] = useState([]); // 현재 열린 탭 목록
-    const [activeTab, setActiveTab] = useState(null); // 현재 활성화된 탭
+// 사이드바 메뉴 정보를 정의합니다.
+const menuItems = [
+    { id: 'attendance', title: '학사 관리', path: '/attendance' },
+    { id: 'scores', title: '성적 입력', path: '/scores' },
+];
 
-    // 사이드바 메뉴 클릭 시 탭 추가 및 활성화
-    const handleMenuClick = (menu) => {
-        if (!tabs.includes(menu)) {
-            setTabs([...tabs, menu]);
-        }
-        setActiveTab(menu);
-    };
-
-    // 탭 클릭 시 활성화
-    const handleTabClick = (tab) => {
-        setActiveTab(tab);
-    };
-
-    // 탭 닫기
-    const handleTabClose = (tab) => {
-        const newTabs = tabs.filter((t) => t !== tab);
-        setTabs(newTabs);
-        if (activeTab === tab) {
-            setActiveTab(newTabs.length > 0 ? newTabs[newTabs.length - 1] : null);
-        }
-    };
-
-    const ActiveComponent = activeTab ? MENU_COMPONENTS[activeTab] : null;
+const MainLayout = () => {
+    const { tabs, activeTabId, openTab, closeTab, setActiveTab } = useTabs();
 
     return (
         <div className="main-layout">
-            <Sidebar onMenuClick={handleMenuClick} />
-            <div className="main-content">
-                <TabBar
-                    tabs={tabs}
-                    activeTab={activeTab}
-                    onTabClick={handleTabClick}
-                    onTabClose={handleTabClose}
-                />
-                <div className="content-area">
-                    {ActiveComponent ? <ActiveComponent /> : <div className="empty-tab">탭을 선택해주세요.</div>}
+            <aside className="sidebar">
+                <div className="sidebar-header"><h2>ACADEMY</h2></div>
+                <nav className="sidebar-nav">
+                    {menuItems.map(item => (
+                        <a key={item.id} onClick={() => openTab(item)} className={activeTabId === item.id ? 'active' : ''}>
+                            {item.title}
+                        </a>
+                    ))}
+                </nav>
+            </aside>
+            <main className="main-content">
+                <header className="content-header">
+                    <div className="tab-bar">
+                        {tabs.map(tab => (
+                            <div key={tab.id} className={`tab-item ${tab.id === activeTabId ? 'active' : ''}`} onClick={() => setActiveTab(tab.id)}>
+                                <span>{tab.title}</span>
+                                <button className="close-tab-btn" onClick={(e) => { e.stopPropagation(); closeTab(tab.id); }}>×</button>
+                            </div>
+                        ))}
+                    </div>
+                </header>
+                <div className="page-wrapper">
+                    {tabs.length === 0 ? (
+                        <div className="no-tabs-placeholder">
+                            <p>좌측 메뉴를 선택하여 작업을 시작하세요.</p>
+                        </div>
+                    ) : (
+                        tabs.map(tab => (
+                            <div key={tab.id} style={{ display: tab.id === activeTabId ? 'block' : 'none', height: '100%' }}>
+                                {pageComponents[tab.id]}
+                            </div>
+                        ))
+                    )}
                 </div>
-            </div>
+            </main>
         </div>
     );
-}
+};
 
 export default MainLayout;

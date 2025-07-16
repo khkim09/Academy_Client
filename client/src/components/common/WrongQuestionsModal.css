@@ -1,0 +1,134 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.wq-modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+}
+
+.wq-modal-content h2,
+.wq-modal-content h4 {
+    margin-top: 0;
+}
+
+.wq-modal-body {
+    display: flex;
+    gap: 25px;
+    margin: 20px 0;
+}
+
+.wq-left,
+.wq-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.wq-left textarea {
+    flex: 1;
+    min-height: 300px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none;
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.omr-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.omr-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 5px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.omr-item:hover {
+    background-color: #f0f8ff;
+}
+
+.omr-item.wrong {
+    background-color: #ffebee;
+    border-color: #ffcdd2;
+}
+
+.omr-item label {
+    font-size: 14px;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.omr-item input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    pointer-events: none;
+}
+
+.omr-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.omr-actions button {
+    flex: 1;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+.wq-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.wq-modal-footer button {
+    padding: 10px 25px;
+    border-radius: 5px;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.modal-btn-cancel {
+    background-color: #6c757d;
+    color: white;
+}
+
+.modal-btn-save {
+    background-color: #007bff;
+    color: white;
+}

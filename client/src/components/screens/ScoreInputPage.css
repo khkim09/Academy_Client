@@ -1,0 +1,256 @@
+.score-page-container {
+    display: flex;
+    height: 100%;
+    gap: 20px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.score-left-panel,
+.score-right-panel {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.score-left-panel {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+}
+
+.score-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.score-controls select {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+.new-round-container {
+    display: flex;
+    margin-bottom: 15px;
+    gap: 5px;
+}
+
+.new-round-container input[type="text"] {
+    flex: 2;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.new-round-container input[type="date"] {
+    flex: 3;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.new-round-container button {
+    flex: 1;
+    padding: 0 15px;
+    border: none;
+    background-color: #5cb85c;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.score-list-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #e0e0e0;
+    font-weight: bold;
+}
+
+.list-header span {
+    font-size: 15px;
+}
+
+.refresh-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.refresh-btn:hover {
+    transform: rotate(90deg);
+}
+
+.list-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.score-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.score-table th,
+.score-table td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
+}
+
+.score-table th {
+    background-color: #11476c;
+    color: white;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+
+.score-right-panel {
+    flex: 2;
+    overflow-y: auto;
+}
+
+.score-right-panel form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.score-right-panel h3 {
+    margin: 0 0 10px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #11476c;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 5px;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+.form-group input[readonly] {
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+.form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.form-group-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-group-row .form-group {
+    flex: 1;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.form-actions button {
+    padding: 12px 25px;
+    border-radius: 5px;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.clear-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.save-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+.error-message {
+    color: #e74c3c;
+    font-size: 13px;
+    margin-top: 5px;
+    font-weight: 500;
+}
+
+/* [복구] 자동완성 관련 스타일 */
+.autocomplete {
+    position: relative;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    z-index: 10;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.search-results li {
+    padding: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.search-results li:hover {
+    background-color: #f0f0f0;
+}
+
+.search-results li.highlighted {
+    background-color: #1abc9c;
+    color: white;
+}

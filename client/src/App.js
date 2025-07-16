@@ -1,12 +1,28 @@
-// React 앱 메인
-
-// client/src/App.js
 import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+// import { Toaster } from 'react-hot-toast'; // [삭제]
+
 import MainLayout from './components/layout/MainLayout';
+import AttendancePage from './components/screens/AttendancePage';
+import ScorePage from './components/screens/ScoreInputPage';
+import Toast from './components/common/Toast'; // [추가]
+
 import './App.css';
 
 function App() {
-    return <MainLayout />;
+    return (
+        <>
+            <Toast /> {/* [추가] 앱 전체에 알림을 표시할 컴포넌트 */}
+            <Routes>
+                <Route path="/" element={<MainLayout />}>
+                    <Route index element={<AttendancePage />} />
+                    <Route path="attendance" element={<AttendancePage />} />
+                    <Route path="scores" element={<ScorePage />} />
+                </Route>
+            </Routes>
+            {/* <Toaster position="bottom-center" /> [삭제] */}
+        </>
+    );
 }
 
 export default App;
