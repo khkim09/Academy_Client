@@ -1,24 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { useToast } from '../../contexts/ToastContext';
 import WrongQuestionsModal from '../common/WrongQuestionsModal';
 import './ScoreInputPage.css';
 
 const initialFormState = { student_name: '', phone: '', school: '', test_score: '', total_question: '', wrong_questions: '', assignment1: '', assignment2: '', memo: '' };
-
-const getSuggestedDate = (className) => {
-    const dayMap = { '일': 0, '월': 1, '화': 2, '수': 3, '목': 4, '금': 5, '토': 6 };
-    if (!className) return '';
-    const targetDayChar = className.charAt(0);
-    const targetDay = dayMap[targetDayChar];
-    if (targetDay === undefined) return new Date().toISOString().split('T')[0];
-    const today = new Date();
-    const currentDay = today.getDay();
-    let dayDifference = targetDay - currentDay;
-    if (dayDifference < 0) dayDifference += 7;
-    today.setDate(today.getDate() + dayDifference);
-    return today.toISOString().split('T')[0];
-};
 
 const ScoreInputPage = () => {
     const [classes, setClasses] = useState([]);
@@ -33,19 +19,48 @@ const ScoreInputPage = () => {
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
     const [nameError, setNameError] = useState('');
     const [isOmrModalOpen, setIsOmrModalOpen] = useState(false);
+    const [lastTotalQuestions, setLastTotalQuestions] = useState('');
     const { showToast } = useToast();
+
+    const getSuggestedDate = useCallback((className, roundText) => {
+        const roundNum = parseInt(roundText, 10);
+        // 2회차 이상이고, 이전 회차 정보가 있으면 7일 추가
+        if (roundNum > 1) {
+            const prevRound = rounds.find(r => r.round === String(roundNum - 1));
+            if (prevRound && prevRound.date) {
+                const prevDate = new Date(prevRound.date);
+                prevDate.setDate(prevDate.getDate() + 7);
+                return prevDate.toISOString().split('T')[0];
+            }
+        }
+        // 그 외의 경우 (1회차, 이전 회차 정보 없음 등)
+        const dayMap = { '일': 0, '월': 1, '화': 2, '수': 3, '목': 4, '금': 5, '토': 6 };
+        if (!className) return '';
+        const targetDayChar = className.charAt(0);
+        const targetDay = dayMap[targetDayChar];
+        if (targetDay === undefined) return new Date().toISOString().split('T')[0];
+        const today = new Date();
+        const currentDay = today.getDay();
+        let dayDifference = targetDay - currentDay;
+        if (dayDifference < 0) dayDifference += 7;
+        today.setDate(today.getDate() + dayDifference);
+        return today.toISOString().split('T')[0];
+    }, [rounds]);
 
     useEffect(() => {
         axios.get('/api/attendance/classes')
             .then(res => {
                 setClasses(res.data);
-                if (res.data.length > 0) setSelectedClass(res.data[0]);
+                if (res.data.length > 0)
+                    setSelectedClass(res.data[0]);
             })
             .catch(() => showToast('분반 목록을 불러오는 데 실패했습니다.', 'error'));
     }, [showToast]);
 
     const fetchRounds = useCallback(() => {
-        if (!selectedClass) return;
+        if (!selectedClass)
+            return;
+
         axios.get(`/api/scores/rounds?className=${selectedClass}`)
             .then(res => {
                 setRounds(res.data);
@@ -55,7 +70,7 @@ const ScoreInputPage = () => {
                     setSelectedRound('new');
                 }
             })
-            .catch(() => showToast('회차 목록을 불러오는 데 실패했습니다.', 'error'));
+            .catch(() => showToast('회차 목록 로딩 실패', 'error'));
     }, [selectedClass, showToast]);
 
     useEffect(() => { fetchRounds(); }, [fetchRounds]);
@@ -81,9 +96,10 @@ const ScoreInputPage = () => {
 
     useEffect(() => {
         if (selectedRound === 'new' && selectedClass) {
-            setNewRound({ text: '', date: getSuggestedDate(selectedClass) });
+            const suggestedDate = getSuggestedDate(selectedClass, newRound.text);
+            setNewRound(prev => ({ ...prev, date: suggestedDate }));
         }
-    }, [selectedRound, selectedClass]);
+    }, [newRound.text, selectedRound, selectedClass, getSuggestedDate]);
 
     const handleAddRound = () => {
         const roundToAdd = newRound.text.trim();
@@ -102,42 +118,67 @@ const ScoreInputPage = () => {
 
     const handleFormChange = (e) => {
         const { name, value } = e.target;
+
         if (name === 'student_name') {
             setFormState(prev => ({ ...prev, student_name: value, phone: '', school: '' }));
             setNameError('');
             setHighlightedIndex(-1);
+
             if (value && selectedClass) {
                 axios.get(`/api/scores/search-student?className=${selectedClass}&name=${value}`)
-                    .then(res => setSearchResults(res.data));
+                    .then(res => {
+                        setSearchResults(res.data);
+                    });
             } else {
                 setSearchResults([]);
             }
+        } else if (name === 'total_question') {
+            setFormState(prev => ({ ...prev, [name]: value }));
+            setLastTotalQuestions(value); // 총 문항수 기억
         } else {
             setFormState(prev => ({ ...prev, [name]: value }));
         }
     };
 
     const handleKeyDown = (e) => {
-        if (searchResults.length === 0) return;
+        if (searchResults.length === 0)
+            return;
         if (e.key === 'ArrowDown') { e.preventDefault(); setHighlightedIndex(prev => (prev < searchResults.length - 1 ? prev + 1 : prev)); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlightedIndex(prev => (prev > 0 ? prev - 1 : 0)); }
         else if (e.key === 'Enter' && highlightedIndex > -1) { e.preventDefault(); handleSelectStudent(searchResults[highlightedIndex]); }
     };
 
     const handleSelectStudent = (student) => {
-        setFormState(prev => ({ ...prev, student_name: student.student_name, phone: student.phone, school: student.school }));
+        setFormState(prev => ({
+            ...prev,
+            student_name: student.student_name,
+            phone: student.phone,
+            school: student.school,
+            total_question: lastTotalQuestions
+        }));
         setSearchResults([]);
         setNameError('');
     };
 
     const handleNameBlur = () => {
         setTimeout(() => {
-            if (searchResults.length > 0) {
-                if (!formState.phone) setNameError("학생을 목록에서 선택해주세요.");
+            const typedName = formState.student_name.trim();
+            const exactMatches = searchResults.filter(s => s.student_name === typedName);
+
+            if (!formState.phone) {
+                if (exactMatches.length === 1) {
+                    handleSelectStudent(exactMatches[0]); // 정확히 1명인 경우 자동 선택
+                } else if (exactMatches.length > 1) {
+                    setNameError("동명이인이 존재합니다. 목록에서 학생을 선택해주세요.");
+                } else if (typedName !== '') {
+                    setNameError("해당 분반에 없는 학생입니다. 분반, 학생 이름을 확인해주세요.");
+                }
             }
-            setSearchResults([]);
+
+            setSearchResults([]); // 검색 목록은 항상 지움
         }, 150);
     };
+
 
     const handleSave = async (e) => {
         e.preventDefault();
@@ -172,6 +213,17 @@ const ScoreInputPage = () => {
         });
     };
 
+    const scoreSummary = useMemo(() => {
+        const validScores = scoreList.filter(s => s.test_score != null);
+        if (validScores.length === 0) {
+            return { avg: '-', total: lastTotalQuestions || '-' };
+        }
+        const sum = validScores.reduce((acc, s) => acc + s.test_score, 0);
+        const avg = (sum / validScores.length).toFixed(1);
+        const total = scoreList.find(s => s.total_question != null)?.total_question || lastTotalQuestions || '-';
+        return { avg, total };
+    }, [scoreList, lastTotalQuestions]);
+
     const currentRoundDate = (rounds.find(r => r.round === selectedRound)?.date || '').split('T')[0];
 
     return (
@@ -199,6 +251,9 @@ const ScoreInputPage = () => {
                     <div className="list-header">
                         <span>[{selectedClass} / {selectedRound === 'new' ? `${newRound.text || '?'}회차` : `${selectedRound}회차`} {currentRoundDate && `(${currentRoundDate})`}]</span>
                         <button onClick={fetchList} className="refresh-btn" title="새로고침">🔄</button>
+                    </div>
+                    <div className="list-summary">
+                        <span>테스트 평균: {scoreSummary.avg} / {scoreSummary.total}</span>
                     </div>
                     <div className="list-content">
                         <table className="score-table">
@@ -237,7 +292,21 @@ const ScoreInputPage = () => {
                     </div>
                     <div className="form-group">
                         <label>틀린 문항</label>
-                        <input type="text" readOnly onClick={() => formState.total_question && setIsOmrModalOpen(true)} value={formState.wrong_questions} placeholder="총 문항수 입력 후 클릭..." style={{ cursor: formState.total_question ? 'pointer' : 'not-allowed' }} />
+                        <input
+                            type="text"
+                            readOnly
+                            onClick={() => formState.total_question && setIsOmrModalOpen(true)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && formState.total_question && !isOmrModalOpen) {
+                                    e.preventDefault();
+                                    setIsOmrModalOpen(true);
+                                }
+                            }}
+                            value={formState.wrong_questions}
+                            placeholder="총 문항 수 입력 후 클릭..."
+                            style={{ cursor: formState.total_question ? 'pointer' : 'not-allowed' }}
+                            tabIndex={0}
+                        />
                     </div>
                     <div className="form-group-row">
                         <div className="form-group">

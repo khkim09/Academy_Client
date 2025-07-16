@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './WrongQuestionsModal.css';
 
 const WrongQuestionsModal = ({ totalQuestions, initialValue, onSave, onClose }) => {
     const [textValue, setTextValue] = useState('');
     const [omrState, setOmrState] = useState([]);
 
+    const textareaRef = useRef(null);
+
     useEffect(() => {
-        const numbers = (initialValue || '').split(',').map(n => parseInt(n.trim(), 10)).filter(n => !isNaN(n));
+        const numbers = (initialValue || '').split(',').map(
+            n => parseInt(n.trim(), 10)).filter(n => !isNaN(n)
+            );
         setTextValue(numbers.join(', '));
+
         const maxQuestions = totalQuestions > 0 ? totalQuestions : 50;
         const newOmrState = Array(maxQuestions).fill(false);
         numbers.forEach(num => {
@@ -17,6 +22,11 @@ const WrongQuestionsModal = ({ totalQuestions, initialValue, onSave, onClose }) 
         });
         setOmrState(newOmrState);
     }, [initialValue, totalQuestions]);
+
+    useEffect(() => {
+        if (textareaRef.current)
+            textareaRef.current.focus(); // 모달 열릴 때 자동 포커스
+    }, []);
 
     const handleOmrClick = (index) => {
         const newOmrState = [...omrState];
@@ -37,9 +47,13 @@ const WrongQuestionsModal = ({ totalQuestions, initialValue, onSave, onClose }) 
     }
 
     const handleSave = () => {
-        const wrongNumbers = omrState.map((isWrong, i) => isWrong ? i + 1 : null).filter(n => n !== null);
-        // [수정] 틀린 문항 문자열과 개수를 함께 전달합니다.
-        onSave(wrongNumbers.join(', '), wrongNumbers.length);
+        const wrongNumbers = textValue
+            .split(',')
+            .map(n => parseInt(n.trim(), 10))
+            .filter(n => !isNaN(n) && n > 0 && n <= omrState.length);
+
+        const unique = [...new Set(wrongNumbers)].sort((a, b) => a - b);
+        onSave(unique.join(', '), unique.length);
         onClose();
     };
 
@@ -51,9 +65,16 @@ const WrongQuestionsModal = ({ totalQuestions, initialValue, onSave, onClose }) 
                     <div className="wq-left">
                         <h4>직접 입력</h4>
                         <textarea
+                            ref={textareaRef}
                             value={textValue}
                             onChange={(e) => setTextValue(e.target.value)}
-                            placeholder="틀린 문항 번호를 쉼표(,)로 구분하여 입력하세요. 예: 3, 7, 12"
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSave();
+                                }
+                            }}
+                            placeholder="틀린 문항 번호를 쉼표(,)로 구분하여 입력하세요. 예: 3, 7, 12\nShift + Enter로 저장"
                         />
                     </div>
                     <div className="wq-right">
