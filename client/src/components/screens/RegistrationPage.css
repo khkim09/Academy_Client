@@ -43,19 +43,35 @@
     font-size: 18px;
 }
 
-.template-btn {
+.template-btn,
+.excel-download-btn {
     display: inline-block;
     padding: 10px 20px;
-    background-color: #007bff;
     color: white;
     text-decoration: none;
     border-radius: 5px;
     font-weight: bold;
+    border: none;
+    cursor: pointer;
     transition: background-color 0.2s;
+}
+
+.template-btn {
+    background-color: #007bff;
+    margin-right: 10px;
 }
 
 .template-btn:hover {
     background-color: #0056b3;
+}
+
+.excel-download-btn {
+    background-color: #e74c3c;
+    /* 눈이 아프지 않은 빨간색 계열 */
+}
+
+.excel-download-btn:hover {
+    background-color: #c0392b;
 }
 
 .upload-step p {

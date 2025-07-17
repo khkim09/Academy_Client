@@ -45,7 +45,7 @@ const AttendancePage = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     // 뷰 모드 및 데이터 상태
-    const [viewMode, setViewMode] = useState('roster'); // 'roster' | 'history'
+    const [viewMode, setViewMode] = useState('roster');
     const [roster, setRoster] = useState([]); // 분반 명단
     const [history, setHistory] = useState([]); // 개인 출결 기록
     const [selectedStudentInfo, setSelectedStudentInfo] = useState(null);
@@ -57,6 +57,25 @@ const AttendancePage = () => {
 
     // 최신화 갱신 작업
     const { refreshKey } = useDataRefresh();
+
+    // 분반 목록 로딩 로직
+    const fetchClasses = useCallback(() => {
+        axios.get('/api/attendance/classes')
+            .then(res => {
+                const classList = ['전체 분반', ...res.data];
+                setClasses(classList);
+                // 기존 선택을 유지하되, 선택된 분반이 사라졌으면 기본값으로
+                if (!res.data.includes(selectedClass) && selectedClass !== '전체 분반') {
+                    setSelectedClass('전체 분반');
+                }
+            })
+            .catch(err => console.error('분반 목록 로딩 실패:', err));
+    }, [selectedClass]); // selectedClass를 의존성에 추가하여 안정성 확보
+
+    // [핵심 수정] refreshKey가 변경될 때마다 fetchClasses를 호출
+    useEffect(() => {
+        fetchClasses();
+    }, [refreshKey, fetchClasses]);
 
     // --- 데이터 로딩 (Hooks) ---
     useEffect(() => {

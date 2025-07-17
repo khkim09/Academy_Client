@@ -21,13 +21,10 @@ const RegistrationPage = () => {
             showToast('업로드할 엑셀 파일을 선택해주세요.', 'error');
             return;
         }
-
         const formData = new FormData();
         formData.append('rosterFile', selectedFile);
-
         setIsUploading(true);
         setUploadResult(null);
-
         try {
             const res = await axios.post('/api/registration/upload-roster', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -43,9 +40,28 @@ const RegistrationPage = () => {
         }
     };
 
+    const handleDownload = async () => {
+        try {
+            const response = await axios.get(`/api/export/download-all-students`, {
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', '전체_학생_종합리포트.xlsx');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            const errorMessage = '다운로드에 실패했습니다. DB에 학생 데이터가 있는지 확인해주세요.';
+            showToast(errorMessage, 'error');
+        }
+    };
+
     return (
         <div className="registration-page-container">
-            <h2>신규 학생 일괄 등록</h2>
+            <h2>신규 학생 일괄 등록 및 관리</h2>
 
             <div className="upload-section">
                 <h3>분반별 학생 명단 등록 (엑셀)</h3>
@@ -55,11 +71,18 @@ const RegistrationPage = () => {
                 </p>
 
                 <div className="upload-step">
-                    <h4>1. 템플릿 다운로드 및 작성</h4>
-                    <a href="/template_roster.xlsx" download className="template-btn">
-                        엑셀 템플릿 다운로드
-                    </a>
-                    <p>템플릿의 Sheet 이름을 실제 분반 이름으로 변경하고, 학생 정보를 입력하세요.</p>
+                    <h4>1. 템플릿 다운로드 및 데이터 관리</h4>
+                    <div>
+                        <a href="/template_roster.xlsx" download className="template-btn">
+                            업로드 템플릿 다운로드
+                        </a>
+                        <button onClick={handleDownload} className="excel-download-btn">
+                            전체 학생 정보 다운로드
+                        </button>
+                    </div>
+                    <p>템플릿의 Sheet 이름을 실제 분반 이름으로 변경하고, 학생 정보를 입력하여 업로드할 수 있습니다.<br />
+                        다운로드 버튼으로 현재 DB에 저장된 모든 학생의 출결/성적 데이터를 백업할 수 있습니다.
+                    </p>
                 </div>
 
                 <div className="upload-step">
