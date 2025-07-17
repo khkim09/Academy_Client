@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { useToast } from '../../contexts/ToastContext';
+import { useDataRefresh } from '../../contexts/DataRefreshContext';
 import WrongQuestionsModal from '../common/WrongQuestionsModal';
 import './ScoreInputPage.css';
 
@@ -21,6 +22,7 @@ const ScoreInputPage = () => {
     const [isOmrModalOpen, setIsOmrModalOpen] = useState(false);
     const [lastTotalQuestions, setLastTotalQuestions] = useState('');
     const { showToast } = useToast();
+    const { refreshKey } = useDataRefresh();
 
     const getSuggestedDate = useCallback((className, roundText) => {
         const roundNum = parseInt(roundText, 10);
@@ -92,7 +94,7 @@ const ScoreInputPage = () => {
         } finally { setIsLoading(false); }
     }, [selectedClass, selectedRound, showToast]);
 
-    useEffect(() => { fetchList(); }, [fetchList]);
+    useEffect(() => { fetchList(); }, [fetchList, refreshKey]);
 
     useEffect(() => {
         if (selectedRound === 'new' && selectedClass) {

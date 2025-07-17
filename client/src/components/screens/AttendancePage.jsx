@@ -1,7 +1,8 @@
 // 프론트 코드
 import React, { useState, useEffect, useMemo } from 'react';
-import './AttendancePage.css';
 import axios from 'axios';
+import { useDataRefresh } from '../../contexts/DataRefreshContext';
+import './AttendancePage.css';
 
 // 동명이인 선택 팝업(모달) 컴포넌트
 const SearchStudentModal = ({ students, onSelect, onClose }) => {
@@ -54,6 +55,9 @@ const AttendancePage = () => {
     const [foundStudents, setFoundStudents] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    // 최신화 갱신 작업
+    const { refreshKey } = useDataRefresh();
+
     // --- 데이터 로딩 (Hooks) ---
     useEffect(() => {
         axios.get('/api/attendance/classes')
@@ -69,12 +73,13 @@ const AttendancePage = () => {
         // 분반 선택이 바뀌면 항상 명단(roster) 뷰로 초기화
         setViewMode('roster');
         setSelectedStudentInfo(null);
-        if (!selectedClass || !selectedDate) return;
+        if (!selectedClass || !selectedDate)
+            return;
 
         if (selectedClass !== '전체 분반' || viewMode === 'roster') {
             fetchRosterData();
         }
-    }, [selectedClass, selectedDate]);
+    }, [selectedClass, selectedDate, refreshKey]);
 
     const fetchRosterData = async () => {
         setIsLoading(true);

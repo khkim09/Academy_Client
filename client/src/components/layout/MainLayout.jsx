@@ -2,17 +2,20 @@ import React from 'react';
 import { useTabs } from '../../contexts/TabContext';
 import './MainLayout.css';
 
+import RegistrationPage from '../screens/RegistrationPage';
 import AttendancePage from '../screens/AttendancePage';
 import ScoreInputPage from '../screens/ScoreInputPage';
 
 // 페이지 컴포넌트를 미리 매핑해둡니다.
 const pageComponents = {
+    registration: <RegistrationPage />,
     attendance: <AttendancePage />,
     scores: <ScoreInputPage />,
 };
 
 // 사이드바 메뉴 정보를 정의합니다.
 const menuItems = [
+    { id: 'registration', title: '신규 등록', path: '/registration' },
     { id: 'attendance', title: '학사 관리', path: '/attendance' },
     { id: 'scores', title: '성적 입력', path: '/scores' },
 ];

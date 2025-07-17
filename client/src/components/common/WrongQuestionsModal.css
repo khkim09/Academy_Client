@@ -48,6 +48,11 @@
     line-height: 1.6;
 }
 
+.wq-left textarea::placeholder {
+    white-space: pre-line;
+    line-height: 1.6;
+}
+
 .omr-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);

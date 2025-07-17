@@ -1,11 +1,12 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-// import { Toaster } from 'react-hot-toast'; // [삭제]
 
 import MainLayout from './components/layout/MainLayout';
+import RegistrationPage from './components/screens/RegistrationPage';
 import AttendancePage from './components/screens/AttendancePage';
 import ScorePage from './components/screens/ScoreInputPage';
-import Toast from './components/common/Toast'; // [추가]
+
+import Toast from './components/common/Toast';
 
 import './App.css';
 
@@ -16,6 +17,7 @@ function App() {
             <Routes>
                 <Route path="/" element={<MainLayout />}>
                     <Route index element={<AttendancePage />} />
+                    <Route path="registration" element={<RegistrationPage />} />
                     <Route path="attendance" element={<AttendancePage />} />
                     <Route path="scores" element={<ScorePage />} />
                 </Route>

@@ -74,7 +74,7 @@ const WrongQuestionsModal = ({ totalQuestions, initialValue, onSave, onClose }) 
                                     handleSave();
                                 }
                             }}
-                            placeholder="틀린 문항 번호를 쉼표(,)로 구분하여 입력하세요. 예: 3, 7, 12\nShift + Enter로 저장"
+                            placeholder={"틀린 문항 번호를 쉼표(,)로 구분하여 입력하세요. ( 예: 3, 7, 12 ) \n Shift + Enter로 간편 저장"}
                         />
                     </div>
                     <div className="wq-right">
