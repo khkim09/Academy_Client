@@ -1,386 +1,9 @@
-// // 프론트 코드
-// import React, { useState, useEffect, useMemo } from 'react';
-// import axios from 'axios';
-// import { useDataRefresh } from '../../contexts/DataRefreshContext';
-// import './AttendancePage.css';
-
-// // 동명이인 선택 팝업(모달) 컴포넌트
-// const SearchStudentModal = ({ students, onSelect, onClose }) => {
-//     useEffect(() => {
-//         const handleKeyDown = (e) => {
-//             if (e.key === 'Escape') {
-//                 onClose();
-//             }
-//         };
-
-//         window.addEventListener('keydown', handleKeyDown);
-//         return () => window.removeEventListener('keydown', handleKeyDown);
-//     }, [onClose]);
-
-//     return (
-//         <div className="modal-overlay" onClick={onClose}>
-//             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-//                 <h2>검색 결과</h2>
-//                 <div className="modal-list">
-//                     {students.map((student, index) => (
-//                         <div key={index} className="modal-list-item" onClick={() => onSelect(student)}>
-//                             <span>{student.student_name}</span>
-//                             <span>{student.phone}</span>
-//                             <span>{student.school}</span>
-//                             <span>{student.class_name}</span>
-//                         </div>
-//                     ))}
-//                 </div>
-//                 <button onClick={onClose} className="modal-close-btn">닫기</button>
-//             </div>
-//         </div>
-//     );
-// };
-
-// const AttendancePage = () => {
-//     // --- 상태 관리 (State) ---
-//     const [classes, setClasses] = useState([]);
-//     const [selectedClass, setSelectedClass] = useState('');
-//     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
-//     const [isLoading, setIsLoading] = useState(false);
-
-//     // 뷰 모드 및 데이터 상태
-//     const [viewMode, setViewMode] = useState('roster');
-//     const [roster, setRoster] = useState([]); // 분반 명단
-//     const [history, setHistory] = useState([]); // 개인 출결 기록
-//     const [selectedStudentInfo, setSelectedStudentInfo] = useState(null);
-
-//     // 검색 기능 상태
-//     const [searchQuery, setSearchQuery] = useState('');
-//     const [foundStudents, setFoundStudents] = useState([]);
-//     const [isModalOpen, setIsModalOpen] = useState(false);
-
-//     // 최신화 갱신 작업
-//     const { refreshKey } = useDataRefresh();
-
-//     // 분반 목록 로딩 로직
-//     const fetchClasses = useCallback(() => {
-//         axios.get('/api/attendance/classes')
-//             .then(res => {
-//                 const classList = ['전체 분반', ...res.data];
-//                 setClasses(classList);
-//                 // 기존 선택을 유지하되, 선택된 분반이 사라졌으면 기본값으로
-//                 if (!res.data.includes(selectedClass) && selectedClass !== '전체 분반') {
-//                     setSelectedClass('전체 분반');
-//                 }
-//             })
-//             .catch(err => console.error('분반 목록 로딩 실패:', err));
-//     }, [selectedClass]); // selectedClass를 의존성에 추가하여 안정성 확보
-
-//     // [핵심 수정] refreshKey가 변경될 때마다 fetchClasses를 호출
-//     useEffect(() => {
-//         fetchClasses();
-//     }, [refreshKey, fetchClasses]);
-
-//     // --- 데이터 로딩 (Hooks) ---
-//     useEffect(() => {
-//         axios.get('/api/attendance/classes')
-//             .then(res => {
-//                 const classList = ['전체 분반', ...res.data];
-//                 setClasses(classList);
-//                 setSelectedClass('전체 분반');
-//             })
-//             .catch(err => alert('분반 목록 로딩 실패'));
-//     }, []);
-
-//     useEffect(() => {
-//         // 분반 선택이 바뀌면 항상 명단(roster) 뷰로 초기화
-//         setViewMode('roster');
-//         setSelectedStudentInfo(null);
-//         if (!selectedClass || !selectedDate)
-//             return;
-
-//         if (selectedClass !== '전체 분반' || viewMode === 'roster') {
-//             fetchRosterData();
-//         }
-//     }, [selectedClass, selectedDate, refreshKey]);
-
-//     const fetchRosterData = async () => {
-//         setIsLoading(true);
-//         try {
-//             const res = await axios.get('/api/attendance/get', {
-//                 params: { class_name: selectedClass, date: selectedDate }
-//             });
-//             const loadedStudents = res.data.map(record => ({
-//                 id: `${record.class_name}-${record.phone}`,
-//                 name: record.student_name,
-//                 phone: record.phone,
-//                 school: record.school,
-//                 className: record.class_name,
-//                 isPresent: record.status === '출석'
-//             }));
-//             setRoster(loadedStudents);
-//         } catch (err) {
-//             alert('출결 정보 로딩 실패');
-//             setRoster([]);
-//         } finally {
-//             setIsLoading(false);
-//         }
-//     };
-
-//     // --- 이벤트 핸들러 ---
-//     const handleSearch = async (e) => {
-//         e.preventDefault();
-
-//         // 빈 문자열도 검색 가능
-//         try {
-//             const res = await axios.get(
-//                 '/api/attendance/search-students',
-//                 { params: { name: searchQuery } }
-//             );
-//             if (res.data.length === 0) {
-//                 alert('해당 이름의 학생을 찾을 수 없습니다.');
-//             } else if (res.data.length === 1) {
-//                 handleSelectStudent(res.data[0]);
-//             } else {
-//                 setFoundStudents(res.data);
-//                 setIsModalOpen(true);
-//             }
-//         } catch (err) {
-//             alert('학생 검색 중 오류 발생');
-//         }
-//     };
-
-//     const handleSelectStudent = async (student) => {
-//         setIsModalOpen(false);
-//         setSelectedStudentInfo(student);
-//         setViewMode('history');
-//         setIsLoading(true);
-//         try {
-//             const res = await axios.get(
-//                 '/api/attendance/student-history',
-//                 { params: { phone: student.phone } }
-//             );
-//             setHistory(res.data);
-//         } catch (err) {
-//             alert('학생 출결 기록 로딩 실패');
-//             setHistory([]);
-//         } finally {
-//             setIsLoading(false);
-//         }
-//     };
-
-//     const toggleAttendance = (id) => {
-//         setRoster(roster.map(s => s.id === id ? { ...s, isPresent: !s.isPresent } : s));
-//     };
-
-//     const markAllPresent = () => {
-//         setRoster(roster.map(s => ({ ...s, isPresent: true })));
-//     };
-
-//     const handleSave = async () => {
-//         const records = roster.map(s => ({
-//             class_name: s.className,
-//             date: selectedDate,
-//             student_name: s.name,
-//             phone: s.phone,
-//             status: s.isPresent ? '출석' : '결석'
-//         }));
-//         try {
-//             await axios.post('/api/attendance/save', { records });
-//             alert('출결 정보가 성공적으로 저장되었습니다!');
-//         } catch (err) {
-//             alert(`저장 실패: ${err.response?.data?.error || err.message}`);
-//         }
-//     };
-
-//     // --- 렌더링 로직 ---
-//     const attendanceStats = useMemo(() => {
-//         const total = roster.length;
-//         const present = roster.filter(s => s.isPresent).length;
-//         const absent = total - present;
-//         const absentStudents = roster.filter(s => !s.isPresent);
-//         return { total, present, absent, absentStudents };
-//     }, [roster]);
-
-//     const isAllClassesView = selectedClass === '전체 분반';
-
-//     const renderLeftPanel = () => {
-//         if (viewMode === 'history') {
-//             return (
-//                 <div className="table-wrapper">
-//                     <table className="attendance-table">
-//                         <thead>
-//                             <tr>
-//                                 <th>날짜</th>
-//                                 <th>출결 상태</th>
-//                             </tr>
-//                         </thead>
-//                         <tbody>
-//                             {isLoading ? (
-//                                 <tr><td colSpan="2">기록 로딩 중...</td></tr>
-//                             ) : history.length > 0 ? (
-//                                 history.map((record, idx) => (
-//                                     <tr key={idx}>
-//                                         <td>{record.date}</td>
-//                                         <td className={record.status === '결석' ? 'status-absent' : ''}>{record.status}</td>
-//                                     </tr>
-//                                 ))
-//                             ) : (
-//                                 <tr><td colSpan="2">출결 기록이 없습니다.</td></tr>
-//                             )}
-//                         </tbody>
-//                     </table>
-//                 </div>
-//             );
-//         }
-
-//         return (
-//             <div className="table-wrapper">
-//                 <table className="attendance-table">
-//                     <thead>
-//                         <tr>
-//                             <th>번호</th>
-//                             {isAllClassesView && <th>분반</th>}
-//                             <th>이름</th>
-//                             <th>전화번호</th>
-//                             <th>학교</th>
-//                             <th>출결</th>
-//                         </tr>
-//                     </thead>
-//                     <tbody>
-//                         {isLoading ? (
-//                             <tr><td colSpan={isAllClassesView ? 6 : 5}>로딩 중...</td></tr>
-//                         ) : roster.length > 0 ? (
-//                             roster.map((student, idx) => (
-//                                 <tr key={student.id}>
-//                                     <td>{idx + 1}</td>
-//                                     {isAllClassesView && <td>{student.className}</td>}
-//                                     <td>{student.name}</td>
-//                                     <td>{student.phone}</td>
-//                                     <td>{student.school}</td>
-//                                     <td><input type="checkbox" checked={student.isPresent} onChange={() => toggleAttendance(student.id)} /></td>
-//                                 </tr>
-//                             ))
-//                         ) : (
-//                             <tr><td colSpan={isAllClassesView ? 6 : 5}>학생 데이터가 없습니다.</td></tr>
-//                         )}
-//                     </tbody>
-//                 </table>
-//             </div>
-//         );
-//     };
-
-//     const renderRightPanel = () => {
-//         if (isAllClassesView) {
-//             return (
-//                 <div className="search-panel">
-//                     <h3>학생 검색</h3>
-//                     {selectedStudentInfo && (
-//                         <div className="selected-student-info">
-//                             <p><span>이름:</span> {selectedStudentInfo.student_name}</p>
-//                             <p><span>분반:</span> {selectedStudentInfo.class_name}</p>
-//                             <p><span>연락처:</span> {selectedStudentInfo.phone}</p>
-//                             <p><span>학교:</span> {selectedStudentInfo.school}</p>
-//                         </div>
-//                     )}
-//                     <form onSubmit={handleSearch}>
-//                         <input
-//                             type="text"
-//                             placeholder="학생 이름을 입력하세요"
-//                             value={searchQuery}
-//                             onChange={(e) => setSearchQuery(e.target.value)}
-//                         />
-//                         <button type="submit">검색</button>
-//                     </form>
-//                     <p className="search-guide">
-//                         검색 후 좌측 목록에서 해당 학생의 전체 출결 기록을 확인할 수 있습니다.
-//                     </p>
-//                 </div>
-//             );
-//         }
-
-//         return (
-//             <>
-//                 <div className="stats-row">
-//                     <div>총원<div className="count">{attendanceStats.total}</div></div>
-//                     <div>출석<div className="count">{attendanceStats.present}</div></div>
-//                     <div>결석<div className="count">{attendanceStats.absent}</div></div>
-//                 </div>
-//                 <div className="absent-list-box">
-//                     <div className="absent-list-title">결석자 목록</div>
-//                     <div className="absent-list-content">
-//                         {attendanceStats.absentStudents.map(s => (
-//                             <div key={s.id} className="absent-row">
-//                                 <span>{s.name}</span>
-//                                 <span>{s.school}</span>
-//                             </div>
-//                         ))}
-//                     </div>
-//                 </div>
-//                 <div className="button-row">
-//                     <button onClick={markAllPresent}>일괄 출석</button>
-//                     <button onClick={handleSave}>저장</button>
-//                 </div>
-//             </>
-//         );
-//     };
-
-//     return (
-//         <>
-//             {
-//                 isModalOpen && <SearchStudentModal
-//                     students={foundStudents}
-//                     onSelect={handleSelectStudent}
-//                     onClose={() => setIsModalOpen(false)} />
-//             }
-//             <div className="attendance-container">
-//                 <div className="attendance-left">{renderLeftPanel()}</div>
-//                 <div className="attendance-right">
-//                     <div className="class-controls">
-//                         <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
-//                             {classes.map(cls => <option key={cls} value={cls}>{cls}</option>)}
-//                         </select>
-//                         <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} disabled={viewMode === 'history'} />
-//                     </div>
-//                     {renderRightPanel()}
-//                 </div>
-//             </div>
-//         </>
-//     );
-// };
-
-// export default AttendancePage;
-
-
+// 프론트 코드
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
 import { useDataRefresh } from '../../contexts/DataRefreshContext';
+import { useToast } from '../../contexts/ToastContext';
 import './AttendancePage.css';
-
-const SearchStudentModal = ({ students, onSelect, onClose }) => {
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') onClose();
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [onClose]);
-
-    return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <h2>동명이인 선택</h2>
-                <div className="modal-list">
-                    {students.map((student, index) => (
-                        <div key={index} className="modal-list-item" onClick={() => onSelect(student)}>
-                            <span>{student.student_name}</span>
-                            <span>{student.phone}</span>
-                            <span>{student.school}</span>
-                            <span>{student.class_name}</span>
-                        </div>
-                    ))}
-                </div>
-                <button onClick={onClose} className="modal-close-btn">닫기</button>
-            </div>
-        </div>
-    );
-};
 
 const AttendancePage = () => {
     const [classes, setClasses] = useState([]);
@@ -393,15 +16,15 @@ const AttendancePage = () => {
     const [selectedStudentInfo, setSelectedStudentInfo] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [foundStudents, setFoundStudents] = useState([]);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [highlightedIndex, setHighlightedIndex] = useState(-1);
     const { refreshKey } = useDataRefresh();
+    const { showToast } = useToast();
 
     const fetchClasses = useCallback(() => {
         axios.get('/api/attendance/classes')
             .then(res => {
                 const classList = ['전체 분반', ...res.data];
                 setClasses(classList);
-
                 if (!classList.includes(selectedClass)) {
                     setSelectedClass('전체 분반');
                 }
@@ -409,24 +32,17 @@ const AttendancePage = () => {
             .catch(err => console.error('분반 목록 로딩 실패:', err));
     }, [selectedClass]);
 
-    useEffect(() => {
-        fetchClasses();
-    }, [refreshKey, fetchClasses]);
+    useEffect(fetchClasses, [refreshKey, fetchClasses]);
 
     const fetchAttendanceData = useCallback(() => {
-        if (!selectedClass || !selectedDate)
-            return;
-
+        if (!selectedClass || !selectedDate) return;
         setIsLoading(true);
         axios.get('/api/attendance/get', { params: { class_name: selectedClass, date: selectedDate } })
             .then(res => {
                 setRoster(res.data.map(record => ({
-                    id: `${record.class_name}-${record.phone}`,
-                    name: record.student_name,
-                    phone: record.phone,
-                    school: record.school,
-                    className: record.class_name,
-                    isPresent: record.status === '출석'
+                    id: `${record.class_name}-${record.phone}`, name: record.student_name,
+                    phone: record.phone, school: record.school,
+                    className: record.class_name, isPresent: record.status === 'O'
                 })));
             })
             .catch(err => console.error('출결 정보 로딩 실패:', err))
@@ -434,45 +50,62 @@ const AttendancePage = () => {
     }, [selectedClass, selectedDate]);
 
     useEffect(() => {
-        // 전체 분반 + 검색 모드인데 학생 선택 X이면 로딩 X
-        if (selectedClass === '전체 분반' && viewMode === 'history' && !selectedStudentInfo)
-            return;
-
+        if (selectedClass === '전체 분반' && viewMode === 'history' && !selectedStudentInfo) return;
         fetchAttendanceData();
     }, [fetchAttendanceData, refreshKey]);
 
-    const handleSearch = async (e) => {
-        e.preventDefault();
-        try {
-            const res = await axios.get('/api/attendance/search-students',
-                { params: { name: searchQuery } });
-            if (res.data.length === 0) {
-                alert('해당하는 학생을 찾을 수 없습니다.');
-            } else if (res.data.length === 1) {
-                handleSelectStudent(res.data[0]);
-            } else {
-                setFoundStudents(res.data);
-                setIsModalOpen(true);
+    const handleSearchInputChange = (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+        setHighlightedIndex(-1);
+        if (query.length > 0) {
+            axios.get('/api/attendance/search-students', { params: { name: query } })
+                .then(res => setFoundStudents(res.data));
+        } else {
+            setFoundStudents([]);
+            setSelectedStudentInfo(null);
+            setHistory([]);
+        }
+    };
+
+    const handleSearchKeyDown = (e) => {
+        if (foundStudents.length === 0) return;
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setHighlightedIndex(prev => (prev < foundStudents.length - 1 ? prev + 1 : prev));
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setHighlightedIndex(prev => (prev > 0 ? prev - 1 : 0));
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (highlightedIndex > -1) {
+                handleSelectStudent(foundStudents[highlightedIndex]);
+            } else if (foundStudents.length > 0) {
+                // Enter를 눌렀는데 하이라이트 된 게 없으면 첫번째 항목 선택
+                handleSelectStudent(foundStudents[0]);
             }
-        } catch (err) {
-            alert('학생 검색 중 오류가 발생했습니다.');
+        }
+    };
+
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        if (foundStudents.length > 0) {
+            const indexToSelect = highlightedIndex > -1 ? highlightedIndex : 0;
+            handleSelectStudent(foundStudents[indexToSelect]);
         }
     };
 
     const handleSelectStudent = async (student) => {
-        setIsModalOpen(false);
+        setFoundStudents([]);
+        setSearchQuery(student.student_name);
         setSelectedStudentInfo(student);
         setViewMode('history');
         setIsLoading(true);
         try {
-            const res = await axios.get('/api/attendance/student-history',
-                { params: { phone: student.phone } });
+            const res = await axios.get('/api/attendance/student-history', { params: { phone: student.phone } });
             setHistory(res.data);
-        } catch (err) {
-            alert('학생 출결 기록 로딩 실패');
-        } finally {
-            setIsLoading(false);
-        }
+        } catch (err) { alert('학생 출결 기록 로딩 실패'); }
+        finally { setIsLoading(false); }
     };
 
     const handleClassChange = (e) => {
@@ -480,17 +113,14 @@ const AttendancePage = () => {
         setViewMode('roster');
         setSelectedStudentInfo(null);
         setSearchQuery('');
+        setFoundStudents([]);
     };
 
-    const toggleAttendance = (id) => {
-        setRoster(roster.map(s => s.id === id ? { ...s, isPresent: !s.isPresent } : s));
-    };
-
+    const toggleAttendance = (id) => setRoster(roster.map(s => s.id === id ? { ...s, isPresent: !s.isPresent } : s));
     const markAllPresent = () => setRoster(roster.map(s => ({ ...s, isPresent: true })));
 
     const handleSave = async () => {
-        const records = roster.map(s =>
-        ({
+        const records = roster.map(s => ({
             class_name: s.className,
             student_name: s.name,
             phone: s.phone,
@@ -499,9 +129,10 @@ const AttendancePage = () => {
         }));
         try {
             await axios.post('/api/attendance/save', { records });
-            alert('출결 정보가 성공적으로 저장되었습니다!');
+            showToast('출결 정보가 성공적으로 저장되었습니다!', 'success');
         } catch (err) {
-            alert(`저장 실패: ${err.response?.data?.error || err.message}`);
+            const errorMessage = `저장 실패: ${err.response?.data?.error || err.message}`;
+            showToast(errorMessage, 'error');
         }
     };
 
@@ -516,36 +147,25 @@ const AttendancePage = () => {
     const isAllClassesView = selectedClass === '전체 분반';
 
     const renderLeftPanel = () => {
-        if (isAllClassesView && viewMode === 'history' && selectedStudentInfo) {
-            return (
-                <div className="table-wrapper">
-                    <table className="attendance-table">
-                        <thead><tr><th>날짜</th><th>출결 상태</th></tr></thead>
-                        <tbody>
-                            {isLoading ? (<tr><td colSpan="2">기록 로딩 중...</td></tr>)
-                                : history.length > 0 ? (history.map((record, index) => (
-                                    <tr key={index}><td>{new Date(record.date).toLocaleDateString()}</td><td>{record.status}</td></tr>
-                                )))
-                                    : (<tr><td colSpan="2">출결 기록이 없습니다.</td></tr>)}
-                        </tbody>
-                    </table>
-                </div>
-            );
-        }
+        const tableHeaders = isAllClassesView
+            ? ['번호', '분반', '이름', '전화번호', '학교', '출결']
+            : ['번호', '이름', '전화번호', '학교', '출결'];
+
         return (
             <div className="table-wrapper">
                 <table className="attendance-table">
-                    <thead><tr><th>번호</th><th>이름</th><th>전화번호</th><th>학교</th><th>출결</th></tr></thead>
+                    <thead><tr>{tableHeaders.map(h => <th key={h}>{h}</th>)}</tr></thead>
                     <tbody>
-                        {isLoading ? (<tr><td colSpan={5}>로딩 중...</td></tr>)
+                        {isLoading ? (<tr><td colSpan={tableHeaders.length}>로딩 중...</td></tr>)
                             : roster.length > 0 ? (roster.map((student, idx) => (
                                 <tr key={student.id} className={!student.isPresent ? 'status-absent' : ''}>
                                     <td>{idx + 1}</td>
+                                    {isAllClassesView && <td>{student.className}</td>}
                                     <td>{student.name}</td><td>{student.phone}</td><td>{student.school}</td>
-                                    <td><input type="checkbox" checked={student.isPresent} onChange={() => toggleAttendance(student.id)} /></td>
+                                    <td><input type="checkbox" checked={student.isPresent} onChange={() => toggleAttendance(student.id)} disabled={isAllClassesView} /></td>
                                 </tr>
                             )))
-                                : (<tr><td colSpan={5}>학생 데이터가 없습니다.</td></tr>)}
+                                : (<tr><td colSpan={tableHeaders.length}>학생 데이터가 없습니다.</td></tr>)}
                     </tbody>
                 </table>
             </div>
@@ -557,8 +177,25 @@ const AttendancePage = () => {
             return (
                 <div className="search-panel">
                     <h3>학생 검색</h3>
-                    <form onSubmit={handleSearch}>
-                        <input type="text" placeholder="학생 이름을 입력하세요" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                    <form onSubmit={handleSearchSubmit}>
+                        <div className="search-input-wrapper">
+                            <input
+                                type="text"
+                                placeholder="학생 이름으로 검색..."
+                                value={searchQuery}
+                                onChange={handleSearchInputChange}
+                                onKeyDown={handleSearchKeyDown}
+                            />
+                            {foundStudents.length > 0 && (
+                                <ul className="search-results">
+                                    {foundStudents.map((s, i) => (
+                                        <li key={s.phone} className={i === highlightedIndex ? 'highlighted' : ''} onMouseDown={() => handleSelectStudent(s)}>
+                                            {s.student_name} ({s.class_name})
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
                         <button type="submit">검색</button>
                     </form>
                     {selectedStudentInfo && (
@@ -569,7 +206,24 @@ const AttendancePage = () => {
                             <p><span>학교</span>: {selectedStudentInfo.school}</p>
                         </div>
                     )}
-                    <p className="search-guide">전체 분반에서 학생 이름으로 검색 후 좌측 목록에서 해당 학생의 전체 출결 기록을 확인할 수 있습니다.</p>
+                    {viewMode === 'history' && (
+                        <div className="table-wrapper">
+                            <table className="attendance-table">
+                                <thead><tr><th>날짜</th><th>분반</th><th>출결</th></tr></thead>
+                                <tbody>
+                                    {isLoading ? (<tr><td colSpan="3">기록 로딩 중...</td></tr>)
+                                        : history.length > 0 ? (history.map((record, index) => (
+                                            <tr key={index}>
+                                                <td>{new Date(record.date).toLocaleDateString()}</td>
+                                                <td>{record.class_name}</td>
+                                                <td>{record.status}</td>
+                                            </tr>
+                                        )))
+                                            : (<tr><td colSpan="3">출결 기록이 없습니다.</td></tr>)}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             );
         }
@@ -598,10 +252,6 @@ const AttendancePage = () => {
 
     return (
         <div className="attendance-container">
-            {isModalOpen && <SearchStudentModal
-                students={foundStudents}
-                onSelect={handleSelectStudent}
-                onClose={() => setIsModalOpen(false)} />}
             <div className="attendance-left">
                 {renderLeftPanel()}
             </div>
@@ -610,7 +260,7 @@ const AttendancePage = () => {
                     <select value={selectedClass} onChange={handleClassChange}>
                         {classes.map((c, i) => <option key={i} value={c}>{c}</option>)}
                     </select>
-                    <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} disabled={isAllClassesView} />
+                    <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
                 </div>
                 {renderRightPanel()}
             </div>
