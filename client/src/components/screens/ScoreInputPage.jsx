@@ -5,7 +5,17 @@ import { useDataRefresh } from '../../contexts/DataRefreshContext';
 import WrongQuestionsModal from '../common/WrongQuestionsModal';
 import './ScoreInputPage.css';
 
-const initialFormState = { student_name: '', phone: '', school: '', test_score: '', total_question: '', wrong_questions: '', assignment1: '', assignment2: '', memo: '' };
+const initialFormState = {
+    student_name: '',
+    phone: '',
+    school: '',
+    test_score: '',
+    total_question: '',
+    wrong_questions: '',
+    assignment1: '',
+    assignment2: '',
+    memo: ''
+};
 
 const ScoreInputPage = () => {
     const [classes, setClasses] = useState([]);
@@ -174,13 +184,32 @@ const ScoreInputPage = () => {
         const roundData = rounds.find(r => r.round === finalRound) || newRound;
         const finalDate = roundData.date;
 
-        if (!formState.phone) { showToast('학생 정보가 올바르지 않습니다. 목록에서 학생을 선택해주세요.', 'error'); return; }
-        if (!formState.test_score || !formState.total_question || !formState.assignment1 || !formState.assignment2 || !finalRound) {
-            showToast('필수 항목(*)을 모두 입력해주세요.', 'error'); return;
+        if (!formState.phone) {
+            showToast('학생 정보가 올바르지 않습니다. 목록에서 학생을 선택해주세요.', 'error');
+            return;
+        }
+        if (!formState.test_score || !formState.total_question
+            || !formState.assignment1 || !formState.assignment2 || !finalRound) {
+            showToast('필수 항목(*)을 모두 입력해주세요.', 'error');
+            return;
+        }
+
+        // 만점 아닐 경우, 틀린 문항 필수 기재
+        const testScore = Number(formState.test_score);
+        const totalQuestion = Number(formState.total_question);
+        if (testScore < totalQuestion && !formState.wrong_questions) {
+            showToast('틀린 문항을 입력해주세요.', 'error');
+            return;
         }
 
         try {
-            await axios.post('/api/scores/save', { ...formState, class_name: selectedClass, round: finalRound, date: finalDate });
+            await axios.post('/api/scores/save',
+                {
+                    ...formState,
+                    class_name: selectedClass,
+                    round: finalRound,
+                    date: finalDate
+                });
             showToast('성공적으로 저장되었습니다.', 'success');
             fetchList();
             setFormState(initialFormState);

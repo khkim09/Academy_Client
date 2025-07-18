@@ -1,0 +1,129 @@
+.inquiry-container {
+    display: flex;
+    height: 100%;
+    gap: 20px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* 좌측 패널: 검색 결과 */
+.inquiry-left-panel {
+    flex: 3;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.results-header {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.results-header h4 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.results-table-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 15px;
+}
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.results-table th,
+.results-table td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
+}
+
+.results-table th {
+    background-color: #11476c;
+    color: white;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+
+/* [핵심 수정] 메모 컬럼 스타일 */
+.results-table td.memo-cell {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 250px;
+    /* 최대 너비 지정 */
+    text-align: left;
+    cursor: default;
+    /* 마우스 올렸을 때 텍스트 선택 커서 방지 */
+}
+
+.inquiry-right-panel {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.inquiry-right-panel h3 {
+    margin: 0;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #11476c;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-group label {
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.filter-group input,
+.filter-group select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 15px;
+}
+
+.search-button {
+    width: 100%;
+    /* [수정] 버튼 너비 확장 */
+    padding: 12px;
+    /* [수정] 버튼 패딩 조정 */
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.search-button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.search-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
