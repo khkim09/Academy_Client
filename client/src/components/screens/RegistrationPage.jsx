@@ -25,6 +25,7 @@ const RegistrationPage = () => {
         formData.append('rosterFile', selectedFile);
         setIsUploading(true);
         setUploadResult(null);
+
         try {
             const res = await axios.post('/api/registration/upload-roster', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -47,14 +48,15 @@ const RegistrationPage = () => {
             });
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
+            const filename = "전체_학생_종합리포트.xlsx";
             link.href = url;
-            link.setAttribute('download', '전체_학생_종합리포트.xlsx');
+            link.setAttribute('download', filename);
             document.body.appendChild(link);
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
         } catch (err) {
-            const errorMessage = '다운로드에 실패했습니다. DB에 학생 데이터가 있는지 확인해주세요.';
+            const errorMessage = '다운로드에 실패했습니다. DB에 등록된 분반이 있는지 확인해주세요.';
             showToast(errorMessage, 'error');
         }
     };

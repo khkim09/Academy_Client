@@ -26,7 +26,6 @@ const ScoreInputPage = () => {
 
     const getSuggestedDate = useCallback((className, roundText) => {
         const roundNum = parseInt(roundText, 10);
-        // 2회차 이상이고, 이전 회차 정보가 있으면 7일 추가
         if (roundNum > 1) {
             const prevRound = rounds.find(r => r.round === String(roundNum - 1));
             if (prevRound && prevRound.date) {
@@ -35,7 +34,6 @@ const ScoreInputPage = () => {
                 return prevDate.toISOString().split('T')[0];
             }
         }
-        // 그 외의 경우 (1회차, 이전 회차 정보 없음 등)
         const dayMap = { '일': 0, '월': 1, '화': 2, '수': 3, '목': 4, '금': 5, '토': 6 };
         if (!className) return '';
         const targetDayChar = className.charAt(0);
@@ -49,33 +47,35 @@ const ScoreInputPage = () => {
         return today.toISOString().split('T')[0];
     }, [rounds]);
 
-    useEffect(() => {
+    const fetchClasses = useCallback(() => {
         axios.get('/api/attendance/classes')
             .then(res => {
                 setClasses(res.data);
-                if (res.data.length > 0)
-                    setSelectedClass(res.data[0]);
-            })
-            .catch(() => showToast('분반 목록을 불러오는 데 실패했습니다.', 'error'));
-    }, [showToast]);
-
-    const fetchRounds = useCallback(() => {
-        if (!selectedClass)
-            return;
-
-        axios.get(`/api/scores/rounds?className=${selectedClass}`)
-            .then(res => {
-                setRounds(res.data);
-                if (res.data.length > 0) {
-                    setSelectedRound(res.data[0].round);
-                } else {
-                    setSelectedRound('new');
+                if (!res.data.includes(selectedClass)) {
+                    if (res.data.length > 0)
+                        setSelectedClass(res.data[0]);
+                    else
+                        setSelectedClass('');
                 }
             })
+            .catch(() => showToast('분반 목록을 불러오는 데 실패했습니다.', 'error'));
+    }, [showToast, selectedClass]);
+
+    useEffect(() => {
+        fetchClasses();
+    }, [refreshKey, fetchClasses]);
+
+    const fetchRounds = useCallback(() => {
+        if (!selectedClass) return;
+        setLastTotalQuestions('');
+        axios.get(`/api/scores/rounds?className=${selectedClass}`)
+            .then(res => { setRounds(res.data); if (res.data.length > 0) setSelectedRound(res.data[0].round); else setSelectedRound('new'); })
             .catch(() => showToast('회차 목록 로딩 실패', 'error'));
     }, [selectedClass, showToast]);
 
-    useEffect(() => { fetchRounds(); }, [fetchRounds]);
+    useEffect(() => {
+        fetchRounds();
+    }, [fetchRounds, refreshKey]);
 
     const fetchList = useCallback(async () => {
         if (!selectedClass) return;
@@ -94,7 +94,9 @@ const ScoreInputPage = () => {
         } finally { setIsLoading(false); }
     }, [selectedClass, selectedRound, showToast]);
 
-    useEffect(() => { fetchList(); }, [fetchList, refreshKey]);
+    useEffect(() => {
+        fetchList();
+    }, [fetchList, refreshKey]);
 
     useEffect(() => {
         if (selectedRound === 'new' && selectedClass) {
@@ -120,44 +122,31 @@ const ScoreInputPage = () => {
 
     const handleFormChange = (e) => {
         const { name, value } = e.target;
-
         if (name === 'student_name') {
             setFormState(prev => ({ ...prev, student_name: value, phone: '', school: '' }));
             setNameError('');
             setHighlightedIndex(-1);
-
             if (value && selectedClass) {
                 axios.get(`/api/scores/search-student?className=${selectedClass}&name=${value}`)
-                    .then(res => {
-                        setSearchResults(res.data);
-                    });
-            } else {
-                setSearchResults([]);
-            }
+                    .then(res => setSearchResults(res.data));
+            } else { setSearchResults([]); }
         } else if (name === 'total_question') {
             setFormState(prev => ({ ...prev, [name]: value }));
-            setLastTotalQuestions(value); // 총 문항수 기억
+            setLastTotalQuestions(value);
         } else {
             setFormState(prev => ({ ...prev, [name]: value }));
         }
     };
 
     const handleKeyDown = (e) => {
-        if (searchResults.length === 0)
-            return;
+        if (searchResults.length === 0) return;
         if (e.key === 'ArrowDown') { e.preventDefault(); setHighlightedIndex(prev => (prev < searchResults.length - 1 ? prev + 1 : prev)); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlightedIndex(prev => (prev > 0 ? prev - 1 : 0)); }
         else if (e.key === 'Enter' && highlightedIndex > -1) { e.preventDefault(); handleSelectStudent(searchResults[highlightedIndex]); }
     };
 
     const handleSelectStudent = (student) => {
-        setFormState(prev => ({
-            ...prev,
-            student_name: student.student_name,
-            phone: student.phone,
-            school: student.school,
-            total_question: lastTotalQuestions
-        }));
+        setFormState(prev => ({ ...prev, student_name: student.student_name, phone: student.phone, school: student.school, total_question: lastTotalQuestions }));
         setSearchResults([]);
         setNameError('');
     };
@@ -166,21 +155,18 @@ const ScoreInputPage = () => {
         setTimeout(() => {
             const typedName = formState.student_name.trim();
             const exactMatches = searchResults.filter(s => s.student_name === typedName);
-
             if (!formState.phone) {
                 if (exactMatches.length === 1) {
-                    handleSelectStudent(exactMatches[0]); // 정확히 1명인 경우 자동 선택
+                    handleSelectStudent(exactMatches[0]);
                 } else if (exactMatches.length > 1) {
                     setNameError("동명이인이 존재합니다. 목록에서 학생을 선택해주세요.");
                 } else if (typedName !== '') {
                     setNameError("해당 분반에 없는 학생입니다. 분반, 학생 이름을 확인해주세요.");
                 }
             }
-
-            setSearchResults([]); // 검색 목록은 항상 지움
+            setSearchResults([]);
         }, 150);
     };
-
 
     const handleSave = async (e) => {
         e.preventDefault();
@@ -217,13 +203,11 @@ const ScoreInputPage = () => {
 
     const scoreSummary = useMemo(() => {
         const validScores = scoreList.filter(s => s.test_score != null);
-        if (validScores.length === 0) {
-            return { avg: '-', total: lastTotalQuestions || '-' };
-        }
-        const sum = validScores.reduce((acc, s) => acc + s.test_score, 0);
+        if (validScores.length === 0) return { avg: '-', total: lastTotalQuestions || '-' };
+        const sum = validScores.reduce((acc, s) => acc + Number(s.test_score), 0);
         const avg = (sum / validScores.length).toFixed(1);
-        const total = scoreList.find(s => s.total_question != null)?.total_question || lastTotalQuestions || '-';
-        return { avg, total };
+        const totalInList = scoreList.find(s => s.total_question != null)?.total_question;
+        return { avg, total: totalInList || lastTotalQuestions || '-' };
     }, [scoreList, lastTotalQuestions]);
 
     const currentRoundDate = (rounds.find(r => r.round === selectedRound)?.date || '').split('T')[0];
@@ -294,21 +278,7 @@ const ScoreInputPage = () => {
                     </div>
                     <div className="form-group">
                         <label>틀린 문항</label>
-                        <input
-                            type="text"
-                            readOnly
-                            onClick={() => formState.total_question && setIsOmrModalOpen(true)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && formState.total_question && !isOmrModalOpen) {
-                                    e.preventDefault();
-                                    setIsOmrModalOpen(true);
-                                }
-                            }}
-                            value={formState.wrong_questions}
-                            placeholder="총 문항 수 입력 후 클릭..."
-                            style={{ cursor: formState.total_question ? 'pointer' : 'not-allowed' }}
-                            tabIndex={0}
-                        />
+                        <input type="text" readOnly onClick={() => formState.total_question && setIsOmrModalOpen(true)} value={formState.wrong_questions} placeholder="총 문항수 입력 후 클릭..." style={{ cursor: formState.total_question ? 'pointer' : 'not-allowed' }} />
                     </div>
                     <div className="form-group-row">
                         <div className="form-group">
