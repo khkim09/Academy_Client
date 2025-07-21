@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import { useToast } from '../../contexts/ToastContext';
 import { useDataRefresh } from '../../contexts/DataRefreshContext';
 import WrongQuestionsModal from '../common/WrongQuestionsModal';
@@ -58,7 +58,7 @@ const ScoreInputPage = () => {
     }, [rounds]);
 
     const fetchClasses = useCallback(() => {
-        axios.get('/api/attendance/classes')
+        api.get('/api/attendance/classes')
             .then(res => {
                 setClasses(res.data);
                 if (!res.data.includes(selectedClass)) {
@@ -78,7 +78,7 @@ const ScoreInputPage = () => {
     const fetchRounds = useCallback(() => {
         if (!selectedClass) return;
         setLastTotalQuestions('');
-        axios.get(`/api/scores/rounds?className=${selectedClass}`)
+        api.get(`/api/scores/rounds?className=${selectedClass}`)
             .then(res => { setRounds(res.data); if (res.data.length > 0) setSelectedRound(res.data[0].round); else setSelectedRound('new'); })
             .catch(() => showToast('회차 목록 로딩 실패', 'error'));
     }, [selectedClass, showToast]);
@@ -93,9 +93,9 @@ const ScoreInputPage = () => {
         try {
             let response;
             if (selectedRound && selectedRound !== 'new') {
-                response = await axios.get(`/api/scores/list?className=${selectedClass}&round=${selectedRound}`);
+                response = await api.get(`/api/scores/list?className=${selectedClass}&round=${selectedRound}`);
             } else {
-                response = await axios.get(`/api/scores/roster?className=${selectedClass}`);
+                response = await api.get(`/api/scores/roster?className=${selectedClass}`);
             }
             setScoreList(response.data);
         } catch (err) {
@@ -137,7 +137,7 @@ const ScoreInputPage = () => {
             setNameError('');
             setHighlightedIndex(-1);
             if (value && selectedClass) {
-                axios.get(`/api/scores/search-student?className=${selectedClass}&name=${value}`)
+                api.get(`/api/scores/search-student?className=${selectedClass}&name=${value}`)
                     .then(res => setSearchResults(res.data));
             } else { setSearchResults([]); }
         } else if (name === 'total_question') {
@@ -203,7 +203,7 @@ const ScoreInputPage = () => {
         }
 
         try {
-            await axios.post('/api/scores/save',
+            await api.post('/api/scores/save',
                 {
                     ...formState,
                     class_name: selectedClass,

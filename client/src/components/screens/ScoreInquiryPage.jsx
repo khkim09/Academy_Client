@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import { useDataRefresh } from '../../contexts/DataRefreshContext';
 import { useToast } from '../../contexts/ToastContext';
 import './ScoreInquiryPage.css';
@@ -14,7 +14,7 @@ const ScoreInquiryPage = () => {
     const { showToast } = useToast();
 
     useEffect(() => {
-        axios.get('/api/attendance/classes')
+        api.get('/api/attendance/classes')
             .then(res => {
                 const classList = ['전체 분반', ...res.data];
                 setClasses(classList);
@@ -30,7 +30,7 @@ const ScoreInquiryPage = () => {
     const handleSearch = useCallback(async (currentFilters) => {
         setIsLoading(true);
         try {
-            const res = await axios.get('/api/scores/inquiry', { params: currentFilters });
+            const res = await api.get('/api/scores/inquiry', { params: currentFilters });
             setResults(res.data);
 
             let criteria = `[${currentFilters.className}`;

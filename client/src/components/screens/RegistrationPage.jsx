@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import { useToast } from '../../contexts/ToastContext';
 import { useDataRefresh } from '../../contexts/DataRefreshContext';
 import './RegistrationPage.css';
@@ -27,7 +27,7 @@ const RegistrationPage = () => {
         setUploadResult(null);
 
         try {
-            const res = await axios.post('/api/registration/upload-roster', formData, {
+            const res = await api.post('/api/registration/upload-roster', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             setUploadResult(res.data);
@@ -43,7 +43,7 @@ const RegistrationPage = () => {
 
     const handleDownload = async () => {
         try {
-            const response = await axios.get(`/api/export/download-all-students`, {
+            const response = await api.get(`/api/export/download-all-students`, {
                 responseType: 'blob'
             });
             const url = window.URL.createObjectURL(new Blob([response.data]));

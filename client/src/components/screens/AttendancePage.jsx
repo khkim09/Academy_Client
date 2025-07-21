@@ -1,6 +1,6 @@
 // 프론트 코드
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import axios from 'axios';
+import api from '../../api';
 import { useDataRefresh } from '../../contexts/DataRefreshContext';
 import { useToast } from '../../contexts/ToastContext';
 import './AttendancePage.css';
@@ -21,7 +21,7 @@ const AttendancePage = () => {
     const { showToast } = useToast();
 
     const fetchClasses = useCallback(() => {
-        axios.get('/api/attendance/classes')
+        api.get('/api/attendance/classes')
             .then(res => {
                 const classList = ['전체 분반', ...res.data];
                 setClasses(classList);
@@ -37,7 +37,7 @@ const AttendancePage = () => {
     const fetchAttendanceData = useCallback(() => {
         if (!selectedClass || !selectedDate) return;
         setIsLoading(true);
-        axios.get('/api/attendance/get', { params: { class_name: selectedClass, date: selectedDate } })
+        api.get('/api/attendance/get', { params: { class_name: selectedClass, date: selectedDate } })
             .then(res => {
                 setRoster(res.data.map(record => ({
                     id: `${record.class_name}-${record.phone}`, name: record.student_name,
@@ -59,7 +59,7 @@ const AttendancePage = () => {
         setSearchQuery(query);
         setHighlightedIndex(-1);
         if (query.length > 0) {
-            axios.get('/api/attendance/search-students', { params: { name: query } })
+            api.get('/api/attendance/search-students', { params: { name: query } })
                 .then(res => setFoundStudents(res.data));
         } else {
             setFoundStudents([]);
@@ -102,7 +102,7 @@ const AttendancePage = () => {
         setViewMode('history');
         setIsLoading(true);
         try {
-            const res = await axios.get('/api/attendance/student-history', { params: { phone: student.phone } });
+            const res = await api.get('/api/attendance/student-history', { params: { phone: student.phone } });
             setHistory(res.data);
         } catch (err) { alert('학생 출결 기록 로딩 실패'); }
         finally { setIsLoading(false); }
@@ -128,7 +128,7 @@ const AttendancePage = () => {
             status: s.isPresent ? 'O' : 'X'
         }));
         try {
-            await axios.post('/api/attendance/save', { records });
+            await api.post('/api/attendance/save', { records });
             showToast('출결 정보가 성공적으로 저장되었습니다!', 'success');
         } catch (err) {
             const errorMessage = `저장 실패: ${err.response?.data?.error || err.message}`;
