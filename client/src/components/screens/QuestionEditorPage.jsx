@@ -3,11 +3,12 @@ import { useParams } from 'react-router-dom';
 import { Document, Page, pdfjs } from 'react-pdf';
 import api from '../../api';
 import { useToast } from '../../contexts/ToastContext';
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
-import 'react-pdf/dist/esm/Page/TextLayer.css';
+import 'react-pdf/dist/Page/AnnotationLayer.css'; // [수정] 올바른 CSS 경로
+import 'react-pdf/dist/Page/TextLayer.css';   // [수정] 올바른 CSS 경로
 import './QuestionEditorPage.css';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// [수정] PDF 워커를 안정적인 CDN 경로에서 가져오도록 설정합니다.
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 function QuestionEditorPage() {
     const { materialId } = useParams();
