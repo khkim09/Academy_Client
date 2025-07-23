@@ -6,6 +6,8 @@ import RegistrationPage from './components/screens/RegistrationPage';
 import AttendancePage from './components/screens/AttendancePage';
 import ScorePage from './components/screens/ScoreInputPage';
 import ScoreInquiryPage from './components/screens/ScoreInquiryPage';
+import WrongAnswerNotePage from './components/screens/WrongAnswerNotePage';
+import LectureAdminPage from './components/screens/LectureAdminPage';
 
 import Toast from './components/common/Toast';
 
@@ -22,6 +24,8 @@ function App() {
                     <Route path="attendance" element={<AttendancePage />} />
                     <Route path="scores" element={<ScorePage />} />
                     <Route path="inquiry" elemeny={<ScoreInquiryPage />} />
+                    <Route path="wrong-answer-note" element={<WrongAnswerNotePage />} />
+                    <Route path="lecture-admin" element={<LectureAdminPage />} />
                 </Route>
             </Routes>
         </>
