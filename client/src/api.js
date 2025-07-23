@@ -12,7 +12,7 @@ const api = axios.create({
 
 // 1. PDF 파일과 메타데이터 업로드
 export const uploadMaterial = (formData) => {
-    return apiClient.post('/api/materials/upload', formData, {
+    return api.post('/api/materials/upload', formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
@@ -22,7 +22,7 @@ export const uploadMaterial = (formData) => {
 // 2. 문항 정보(좌표, 정답 등) 저장
 export const saveQuestions = (data) => {
     // data = { materialId: 1, questions: [...] }
-    return apiClient.post('/api/materials/questions', data);
+    return api.post('/api/materials/questions', data);
 };
 
 // --- [신규 추가] 오답노트 관련 API ---
@@ -30,7 +30,7 @@ export const saveQuestions = (data) => {
 // 3. 학생의 오답 문항 목록 조회
 export const getIncorrectQuestions = (params) => {
     // params = { studentPhone: '010-1234-5678', materialId: 1 }
-    return apiClient.get('/api/notes/incorrect', { params });
+    return api.get('/api/notes/incorrect', { params });
 };
 
 export default api;
