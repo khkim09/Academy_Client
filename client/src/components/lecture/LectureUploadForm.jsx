@@ -47,6 +47,6 @@ function LectureUploadForm({ onUploadSuccess }) {
             </button>
         </form>
     );
-}
+};
 
 export default LectureUploadForm;

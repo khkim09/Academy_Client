@@ -23,5 +23,6 @@ function QuestionEditor({ material }) {
             {/* ... JSX 구조 ... */}
         </div>
     );
-}
+};
+
 export default QuestionEditor;

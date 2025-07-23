@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getIncorrectQuestions } from '../api';
+import { getIncorrectQuestions } from '../../api';
 // 다른 API (학생 목록, 자료 목록 조회 등)도 필요에 따라 import
 // import { getStudents, getMaterials } from '../api';
 

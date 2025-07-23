@@ -20,6 +20,6 @@ function LectureAdminPage() {
             )}
         </div>
     );
-}
+};
 
 export default LectureAdminPage;
