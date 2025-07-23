@@ -1,4 +1,3 @@
-// 이전 답변에서 제공한 LectureUploadForm.js 코드를 여기에 붙여넣습니다.
 // (분반, 회차, 파일 입력 폼과 API 호출 로직 포함)
 import React, { useState } from 'react';
 import { uploadMaterial } from '../../api'; // api.js에서 가져옴

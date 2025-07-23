@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import LectureUploadForm from '../components/lecture/LectureUploadForm'; // 곧 생성할 컴포넌트
-import QuestionEditor from '../components/lecture/QuestionEditor'; // 곧 생성할 컴포넌트
+import LectureUploadForm from '../lecture/LectureUploadForm';
+import QuestionEditor from '../lecture/QuestionEditor';
 
 function LectureAdminPage() {
     const [uploadedMaterial, setUploadedMaterial] = useState(null);
