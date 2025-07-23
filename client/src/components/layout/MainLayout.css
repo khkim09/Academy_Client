@@ -54,14 +54,11 @@
     background-color: #ecf0f1;
     border-bottom: 1px solid #bdc3c7;
     padding: 0;
-    /* 내부 탭 바가 채우도록 패딩 제거 */
     display: flex;
     align-items: flex-end;
-    /* 탭이 아래에 붙도록 */
     flex-shrink: 0;
 }
 
-/* [신설] 탭 바 스타일 */
 .tab-bar {
     display: flex;
     flex-wrap: nowrap;
@@ -89,7 +86,6 @@
 
 .tab-item.active {
     background-color: white;
-    /* 페이지와 연결된 것처럼 보이게 */
     border-top: 3px solid #1abc9c;
     border-bottom: 1px solid white;
     z-index: 2;
@@ -118,7 +114,6 @@
 .page-wrapper {
     flex: 1;
     overflow: hidden;
-    /* 내부 페이지에서 스크롤을 관리하도록 변경 */
     background-color: white;
     position: relative;
     z-index: 1;

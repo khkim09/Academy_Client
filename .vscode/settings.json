@@ -1,0 +1,35 @@
+{
+    // === 공통 편집기 설정 ===
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "editor.formatOnSave": true,
+    // === 파일별 언어 설정 ===
+    "[javascript]": {
+        "editor.tabSize": 4,
+        "editor.formatOnSave": true
+    },
+    "[json]": {
+        "editor.tabSize": 4
+    },
+    "[html]": {
+        "editor.tabSize": 4
+    },
+    "[css]": {
+        "editor.tabSize": 4
+    },
+    "[sql]": {
+        "editor.tabSize": 4,
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "adpyke.vscode-sql-formatter"
+    },
+    // === SQL Formatter 설정 ===
+    "sql-formatter.config": {
+        "language": "mysql",
+        "tabWidth": 4,
+        "useTabs": false,
+        "keywordCase": "upper", // 또는 "lower"
+        "indentStyle": "standard",
+        "linesBetweenQueries": 2
+    }
+}
