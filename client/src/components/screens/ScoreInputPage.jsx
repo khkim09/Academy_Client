@@ -11,7 +11,7 @@ const ScoreInputPage = () => {
     const [classes, setClasses] = useState([]);
     const [selectedClass, setSelectedClass] = useState('');
     const [rounds, setRounds] = useState([]);
-    const [selectedRound, setSelectedRound] = useState(''); // 이제 round의 ID를 저장합니다.
+    const [selectedRound, setSelectedRound] = useState('');
     const [newRoundNumber, setNewRoundNumber] = useState('');
     const [newRoundName, setNewRoundName] = useState('');
     const [scoreList, setScoreList] = useState([]);
@@ -32,21 +32,14 @@ const ScoreInputPage = () => {
     }, [showToast]);
 
     const fetchRounds = useCallback(() => {
-        if (!selectedClass) {
-            setRounds([]);
-            setSelectedRound('');
-            return;
-        }
+        if (!selectedClass) { setRounds([]); setSelectedRound(''); return; }
         api.get(`/api/rounds/list?className=${selectedClass}`)
             .then(res => setRounds(res.data))
             .catch(() => showToast('회차 목록 로딩 실패', 'error'));
     }, [selectedClass, showToast]);
 
     const fetchList = useCallback(async () => {
-        if (!selectedClass || !selectedRound) {
-            setScoreList([]);
-            return;
-        }
+        if (!selectedClass || !selectedRound) { setScoreList([]); return; }
         setIsLoading(true);
         try {
             const res = await api.get('/api/scores/list', { params: { className: selectedClass, roundId: selectedRound } });
@@ -93,7 +86,7 @@ const ScoreInputPage = () => {
     };
 
     const handleSelectStudent = (student) => {
-        setFormState(prev => ({ ...prev, student_name: student.student_name, phone: student.phone, school: student.school, total_question: lastTotalQuestions }));
+        setFormState(prev => ({ ...initialFormState, student_name: student.student_name, phone: student.phone, school: student.school, total_question: lastTotalQuestions }));
         setSearchResults([]);
         setNameError('');
     };
@@ -109,7 +102,6 @@ const ScoreInputPage = () => {
         if (testScore < totalQuestion && !formState.wrong_questions) {
             showToast('만점이 아닌 경우, 틀린 문항 입력은 필수입니다.', 'error'); return;
         }
-
         try {
             await api.post('/api/scores/save', { ...formState, round_id: selectedRound });
             showToast('성공적으로 저장되었습니다.', 'success');
@@ -132,8 +124,6 @@ const ScoreInputPage = () => {
         });
     };
 
-    // ... (KeyDown, NameBlur, Clear 등 나머지 핸들러는 이전과 동일)
-
     const scoreSummary = useMemo(() => {
         const validScores = scoreList.filter(s => s.test_score != null);
         if (validScores.length === 0) return { avg: '-', total: lastTotalQuestions || '-' };
@@ -154,10 +144,11 @@ const ScoreInputPage = () => {
                 <div className="new-round-container">
                     <input type="number" placeholder="새 회차 번호" value={newRoundNumber} onChange={e => setNewRoundNumber(e.target.value)} disabled={!selectedClass} />
                     <input type="text" placeholder="회차 이름 (선택)" value={newRoundName} onChange={e => setNewRoundName(e.target.value)} disabled={!selectedClass} />
-                    <button onClick={handleCreateRound} disabled={!selectedClass || !newRoundNumber}>새 회차 생성</button>
+                    {/* [수정] type="button"을 추가하여 form 제출을 막음 */}
+                    <button type="button" onClick={handleCreateRound} disabled={!selectedClass || !newRoundNumber}>새 회차 생성</button>
                 </div>
                 <div className="score-list-wrapper">
-                    <div className="list-header"><span>학생 목록</span> <button onClick={fetchList} className="refresh-btn">🔄</button></div>
+                    <div className="list-header"><span>학생 목록</span> <button type="button" onClick={fetchList} className="refresh-btn">🔄</button></div>
                     <div className="list-summary"><span>테스트 평균: {scoreSummary.avg} / {scoreSummary.total}</span></div>
                     <div className="list-content">
                         <table className="score-table">
@@ -175,28 +166,10 @@ const ScoreInputPage = () => {
             <div className="score-right-panel">
                 <form onSubmit={handleSave}>
                     <h3>성적 입력</h3>
-                    <div className="form-group autocomplete">
-                        <label>학생 이름 (*)</label>
-                        <input type="text" name="student_name" value={formState.student_name} onChange={handleFormChange} placeholder="이름을 입력하여 검색" autoComplete="off" />
-                        {searchResults.length > 0 && (
-                            <ul className="search-results">
-                                {searchResults.map((s, i) => <li key={s.phone} onMouseDown={() => handleSelectStudent(s)}>{s.student_name} ({s.school})</li>)}
-                            </ul>
-                        )}
-                        {nameError && <p className="error-message">{nameError}</p>}
-                    </div>
-                    <div className="form-group-row">
-                        <div className="form-group"><label>총 문항수 (*)</label><input type="number" name="total_question" value={formState.total_question} onChange={handleFormChange} /></div>
-                        <div className="form-group"><label>점수 (*)</label><input type="number" name="test_score" value={formState.test_score} onChange={handleFormChange} /></div>
-                    </div>
-                    <div className="form-group">
-                        <label>틀린 문항</label>
-                        <input type="text" name="wrong_questions" value={formState.wrong_questions} onFocus={() => setIsOmrModalOpen(true)} readOnly placeholder="클릭하여 OMR 입력" />
-                    </div>
-                    <div className="form-group-row">
-                        <div className="form-group"><label>과제1</label><input type="text" name="assignment1" value={formState.assignment1} onChange={handleFormChange} /></div>
-                        <div className="form-group"><label>과제2</label><input type="text" name="assignment2" value={formState.assignment2} onChange={handleFormChange} /></div>
-                    </div>
+                    <div className="form-group autocomplete"><label>학생 이름 (*)</label><input type="text" name="student_name" value={formState.student_name} onChange={handleFormChange} placeholder="이름을 입력하여 검색" autoComplete="off" />{searchResults.length > 0 && (<ul className="search-results">{searchResults.map((s) => <li key={s.phone} onMouseDown={() => handleSelectStudent(s)}>{s.student_name} ({s.school})</li>)}</ul>)}{nameError && <p className="error-message">{nameError}</p>}</div>
+                    <div className="form-group-row"><div className="form-group"><label>총 문항수 (*)</label><input type="number" name="total_question" value={formState.total_question} onChange={handleFormChange} /></div><div className="form-group"><label>점수 (*)</label><input type="number" name="test_score" value={formState.test_score} onChange={handleFormChange} /></div></div>
+                    <div className="form-group"><label>틀린 문항</label><input type="text" name="wrong_questions" value={formState.wrong_questions} onFocus={() => setIsOmrModalOpen(true)} readOnly placeholder="클릭하여 OMR 입력" /></div>
+                    <div className="form-group-row"><div className="form-group"><label>과제1</label><input type="text" name="assignment1" value={formState.assignment1} onChange={handleFormChange} /></div><div className="form-group"><label>과제2</label><input type="text" name="assignment2" value={formState.assignment2} onChange={handleFormChange} /></div></div>
                     <div className="form-group"><label>메모</label><textarea name="memo" value={formState.memo} onChange={handleFormChange} /></div>
                     <div className="form-actions"><button type="button" className="clear-btn" onClick={() => setFormState(initialFormState)}>초기화</button><button type="submit" className="save-btn">저장</button></div>
                 </form>

@@ -31,7 +31,7 @@ const RegistrationPage = () => {
             });
             setUploadResult(res.data);
             showToast('업로드가 완료되었습니다.', 'success');
-            triggerRefresh(); // 분반 목록 갱신
+            triggerRefresh();
         } catch (err) {
             const errorMessage = err.response?.data?.error || '업로드에 실패했습니다. 파일 형식이나 내용을 확인해주세요.';
             showToast(errorMessage, 'error');
@@ -60,20 +60,18 @@ const RegistrationPage = () => {
     return (
         <div className="registration-page-container">
             <h2>신규 등록 및 데이터 관리</h2>
-
             <div className="upload-section">
                 <h3>학생 명단(Roster) 일괄 등록</h3>
                 <div className="description">
                     엑셀 파일의 각 시트(Sheet) 이름을 등록할 분반 이름과 동일하게 설정해주세요.<br />
                     시스템이 시트 이름을 인식하여 해당하는 분반에 학생들을 자동으로 등록합니다.
                 </div>
-
                 <div className="upload-step">
                     <h4>1단계: 템플릿 다운로드 및 작성</h4>
                     <p>템플릿의 Sheet 이름을 실제 분반 이름으로 변경하고, 학생 정보를 입력하여 업로드할 수 있습니다.</p>
-                    <a href="/roster_template.xlsx" download className="template-btn">명단 템플릿 다운로드</a>
+                    {/* [수정] public 폴더의 파일을 직접 가리키도록 경로 수정 */}
+                    <a href="/roster_template.xlsx" download="roster_template.xlsx" className="template-btn">명단 템플릿 다운로드</a>
                 </div>
-
                 <div className="upload-step">
                     <h4>2단계: 작성한 엑셀 파일 업로드</h4>
                     <div className="upload-controls">
@@ -98,7 +96,6 @@ const RegistrationPage = () => {
                     </div>
                 )}
             </div>
-
             <div className="upload-section">
                 <h3>전체 데이터 백업</h3>
                 <div className="description">
