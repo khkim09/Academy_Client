@@ -25,6 +25,7 @@ const RegistrationPage = () => {
         formData.append('rosterFile', selectedFile);
         setIsUploading(true);
         setUploadResult(null);
+
         try {
             const res = await api.post('/api/registration/upload-roster', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -53,7 +54,8 @@ const RegistrationPage = () => {
             link.remove();
             window.URL.revokeObjectURL(url);
         } catch (err) {
-            showToast('다운로드에 실패했습니다. DB에 등록된 분반이 있는지 확인해주세요.', 'error');
+            const errorMessage = '다운로드에 실패했습니다. DB에 등록된 분반이 있는지 확인해주세요.';
+            showToast(errorMessage, 'error');
         }
     };
 
@@ -61,7 +63,7 @@ const RegistrationPage = () => {
         <div className="registration-page-container">
             <h2>신규 등록 및 데이터 관리</h2>
             <div className="upload-section">
-                <h3>학생 명단(Roster) 일괄 등록</h3>
+                <h3>학생 명단 일괄 등록 (엑셀)</h3>
                 <div className="description">
                     엑셀 파일의 각 시트(Sheet) 이름을 등록할 분반 이름과 동일하게 설정해주세요.<br />
                     시스템이 시트 이름을 인식하여 해당하는 분반에 학생들을 자동으로 등록합니다.
@@ -70,7 +72,9 @@ const RegistrationPage = () => {
                     <h4>1단계: 템플릿 다운로드 및 작성</h4>
                     <p>템플릿의 Sheet 이름을 실제 분반 이름으로 변경하고, 학생 정보를 입력하여 업로드할 수 있습니다.</p>
                     {/* [수정] public 폴더의 파일을 직접 가리키도록 경로 수정 */}
-                    <a href="/roster_template.xlsx" download="roster_template.xlsx" className="template-btn">명단 템플릿 다운로드</a>
+                    <a href="/template_roster.xlsx" download="template_roster.xlsx" className="template-btn">
+                        명단 템플릿 다운로드
+                    </a>
                 </div>
                 <div className="upload-step">
                     <h4>2단계: 작성한 엑셀 파일 업로드</h4>
