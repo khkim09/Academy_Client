@@ -47,10 +47,16 @@
     padding: 12px;
     border-bottom: 1px solid #eee;
     text-align: left;
+    vertical-align: middle;
 }
 
 .file-list-table th {
     font-weight: 600;
+}
+
+.file-list-table button {
+    padding: 5px 10px;
+    cursor: pointer;
 }
 
 .upload-form .form-group {
@@ -70,6 +76,7 @@
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
+    font-size: 15px;
 }
 
 .upload-btn {

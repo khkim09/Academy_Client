@@ -9,11 +9,13 @@
     flex: 3;
     overflow: auto;
     position: relative;
+    /* 자식 요소의 absolute 위치 기준 */
     cursor: crosshair;
 }
 
 .pdf-viewer {
     display: inline-block;
+    /* 스크롤바가 viewer 너비에 맞도록 */
 }
 
 .region-box {
@@ -28,6 +30,7 @@
     align-items: center;
     justify-content: center;
     pointer-events: none;
+    /* 아래 PDF의 이벤트 방해 않도록 */
 }
 
 .region-box.drawing {
@@ -36,6 +39,8 @@
 
 .editor-sidebar {
     flex: 1;
+    min-width: 300px;
+    /* 사이드바 최소 너비 보장 */
     background-color: #343a40;
     padding: 20px;
     display: flex;
@@ -46,12 +51,18 @@
 .editor-sidebar h3 {
     margin: 0;
     text-align: center;
+    border-bottom: 1px solid #495057;
+    padding-bottom: 15px;
 }
 
 .page-controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.page-controls button {
+    padding: 8px 12px;
 }
 
 .region-list {
@@ -65,6 +76,7 @@
 .region-item {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 8px;
     border-bottom: 1px solid #5a6268;
 }
@@ -74,6 +86,8 @@
     color: white;
     border: none;
     cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
 }
 
 .save-all-btn {
@@ -83,4 +97,5 @@
     border: none;
     font-weight: bold;
     cursor: pointer;
+    border-radius: 4px;
 }

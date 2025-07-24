@@ -1,4 +1,3 @@
-// 프론트 코드
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import api from '../../api';
 import { useDataRefresh } from '../../contexts/DataRefreshContext';
@@ -25,32 +24,40 @@ const AttendancePage = () => {
             .then(res => {
                 const classList = ['전체 분반', ...res.data];
                 setClasses(classList);
-                if (!classList.includes(selectedClass)) {
-                    setSelectedClass('전체 분반');
-                }
+                if (!selectedClass) setSelectedClass('전체 분반');
             })
-            .catch(err => console.error('분반 목록 로딩 실패:', err));
-    }, [selectedClass]);
+            .catch(() => showToast('분반 목록을 불러오는 데 실패했습니다.', 'error'));
+    }, [showToast, selectedClass]);
 
     useEffect(fetchClasses, [refreshKey, fetchClasses]);
 
     const fetchAttendanceData = useCallback(() => {
+        if (isAllClassesView) {
+            if (viewMode === 'roster') setRoster([]);
+            return;
+        }
         if (!selectedClass || !selectedDate) return;
+
         setIsLoading(true);
         api.get('/api/attendance/get', { params: { class_name: selectedClass, date: selectedDate } })
             .then(res => {
                 setRoster(res.data.map(record => ({
-                    id: `${record.class_name}-${record.phone}`, name: record.student_name,
-                    phone: record.phone, school: record.school,
-                    className: record.class_name, isPresent: record.status === 'O'
+                    id: `${record.class_name}-${record.phone}`,
+                    name: record.student_name,
+                    phone: record.phone,
+                    school: record.school,
+                    className: record.class_name,
+                    isPresent: record.status !== 'X'
                 })));
             })
-            .catch(err => console.error('출결 정보 로딩 실패:', err))
+            .catch(() => showToast('출결 정보를 불러오는 데 실패했습니다.', 'error'))
             .finally(() => setIsLoading(false));
-    }, [selectedClass, selectedDate]);
+    }, [selectedClass, selectedDate, showToast, viewMode]);
+
+    const isAllClassesView = selectedClass === '전체 분반';
 
     useEffect(() => {
-        if (selectedClass === '전체 분반' && viewMode === 'history' && !selectedStudentInfo) return;
+        if (isAllClassesView && viewMode === 'history' && !selectedStudentInfo) return;
         fetchAttendanceData();
     }, [fetchAttendanceData, refreshKey]);
 
@@ -78,20 +85,8 @@ const AttendancePage = () => {
             setHighlightedIndex(prev => (prev > 0 ? prev - 1 : 0));
         } else if (e.key === 'Enter') {
             e.preventDefault();
-            if (highlightedIndex > -1) {
-                handleSelectStudent(foundStudents[highlightedIndex]);
-            } else if (foundStudents.length > 0) {
-                // Enter를 눌렀는데 하이라이트 된 게 없으면 첫번째 항목 선택
-                handleSelectStudent(foundStudents[0]);
-            }
-        }
-    };
-
-    const handleSearchSubmit = (e) => {
-        e.preventDefault();
-        if (foundStudents.length > 0) {
-            const indexToSelect = highlightedIndex > -1 ? highlightedIndex : 0;
-            handleSelectStudent(foundStudents[indexToSelect]);
+            if (highlightedIndex > -1) handleSelectStudent(foundStudents[highlightedIndex]);
+            else if (foundStudents.length > 0) handleSelectStudent(foundStudents[0]);
         }
     };
 
@@ -104,8 +99,11 @@ const AttendancePage = () => {
         try {
             const res = await api.get('/api/attendance/student-history', { params: { phone: student.phone } });
             setHistory(res.data);
-        } catch (err) { alert('학생 출결 기록 로딩 실패'); }
-        finally { setIsLoading(false); }
+        } catch (err) {
+            showToast('학생 출결 기록을 불러오는 데 실패했습니다.', 'error');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleClassChange = (e) => {
@@ -120,19 +118,12 @@ const AttendancePage = () => {
     const markAllPresent = () => setRoster(roster.map(s => ({ ...s, isPresent: true })));
 
     const handleSave = async () => {
-        const records = roster.map(s => ({
-            class_name: s.className,
-            student_name: s.name,
-            phone: s.phone,
-            date: selectedDate,
-            status: s.isPresent ? 'O' : 'X'
-        }));
+        const records = roster.map(s => ({ class_name: s.className, student_name: s.name, phone: s.phone, date: selectedDate, status: s.isPresent ? 'O' : 'X' }));
         try {
             await api.post('/api/attendance/save', { records });
-            showToast('출결 정보가 성공적으로 저장되었습니다!', 'success');
+            showToast('출결 정보가 성공적으로 저장되었습니다.', 'success');
         } catch (err) {
-            const errorMessage = `저장 실패: ${err.response?.data?.error || err.message}`;
-            showToast(errorMessage, 'error');
+            showToast(err.response?.data?.error || '저장에 실패했습니다.', 'error');
         }
     };
 
@@ -144,28 +135,47 @@ const AttendancePage = () => {
         return { total, present, absent, absentStudents };
     }, [roster]);
 
-    const isAllClassesView = selectedClass === '전체 분반';
-
     const renderLeftPanel = () => {
-        const tableHeaders = isAllClassesView
-            ? ['번호', '분반', '이름', '전화번호', '학교', '출결']
-            : ['번호', '이름', '전화번호', '학교', '출결'];
-
+        if (viewMode === 'history' && selectedStudentInfo) {
+            return (
+                <div className="table-wrapper">
+                    <h3>{selectedStudentInfo.student_name} 학생 출결 기록</h3>
+                    <div className="selected-student-info">
+                        <p><span>분반</span>: {selectedStudentInfo.class_name}</p>
+                        <p><span>연락처</span>: {selectedStudentInfo.phone}</p>
+                        <p><span>학교</span>: {selectedStudentInfo.school}</p>
+                    </div>
+                    <table className="attendance-table">
+                        <thead><tr><th>날짜</th><th>출결</th></tr></thead>
+                        <tbody>
+                            {isLoading ? (<tr><td colSpan="2">기록 로딩 중...</td></tr>)
+                                : history.length > 0 ? (
+                                    history.map((record, idx) => (
+                                        <tr key={idx}><td
+                                        >{new Date(record.date).toLocaleDateString()}</td><td className={record.status === 'X' ? 'status-absent' : ''}>{record.status}</td></tr>
+                                    ))
+                                ) : (<tr><td colSpan="2">출결 기록이 없습니다.</td></tr>)}
+                        </tbody>
+                    </table>
+                </div>
+            );
+        }
         return (
             <div className="table-wrapper">
                 <table className="attendance-table">
-                    <thead><tr>{tableHeaders.map(h => <th key={h}>{h}</th>)}</tr></thead>
+                    <thead><tr><th>번호</th>{isAllClassesView && <th>분반</th>}<th>이름</th><th>전화번호</th><th>학교</th><th>출결</th></tr></thead>
                     <tbody>
-                        {isLoading ? (<tr><td colSpan={tableHeaders.length}>로딩 중...</td></tr>)
-                            : roster.length > 0 ? (roster.map((student, idx) => (
-                                <tr key={student.id} className={!student.isPresent ? 'status-absent' : ''}>
-                                    <td>{idx + 1}</td>
-                                    {isAllClassesView && <td>{student.className}</td>}
-                                    <td>{student.name}</td><td>{student.phone}</td><td>{student.school}</td>
-                                    <td><input type="checkbox" checked={student.isPresent} onChange={() => toggleAttendance(student.id)} disabled={isAllClassesView} /></td>
-                                </tr>
-                            )))
-                                : (<tr><td colSpan={tableHeaders.length}>학생 데이터가 없습니다.</td></tr>)}
+                        {isLoading ? (<tr><td colSpan={isAllClassesView ? 6 : 5}>로딩 중...</td></tr>)
+                            : roster.length > 0 ? (
+                                roster.map((student, idx) => (
+                                    <tr key={student.id}>
+                                        <td>{idx + 1}</td>
+                                        {isAllClassesView && <td>{student.className}</td>}
+                                        <td>{student.name}</td><td>{student.phone}</td><td>{student.school}</td>
+                                        <td><input type="checkbox" checked={student.isPresent} onChange={() => toggleAttendance(student.id)} disabled={isAllClassesView} /></td>
+                                    </tr>
+                                ))
+                            ) : (<tr><td colSpan={isAllClassesView ? 6 : 5}>학생 데이터가 없습니다.</td></tr>)}
                     </tbody>
                 </table>
             </div>
@@ -177,53 +187,21 @@ const AttendancePage = () => {
             return (
                 <div className="search-panel">
                     <h3>학생 검색</h3>
-                    <form onSubmit={handleSearchSubmit}>
+                    <p className="search-guide">전체 학생 명단에서 이름을 검색하고, 학생을 선택하여 개인별 출결 기록을 확인하세요.</p>
+                    <form onSubmit={(e) => { e.preventDefault(); if (foundStudents.length > 0) handleSelectStudent(foundStudents[0]); }}>
                         <div className="search-input-wrapper">
-                            <input
-                                type="text"
-                                placeholder="학생 이름으로 검색..."
-                                value={searchQuery}
-                                onChange={handleSearchInputChange}
-                                onKeyDown={handleSearchKeyDown}
-                            />
+                            <input type="text" value={searchQuery} onChange={handleSearchInputChange} onKeyDown={handleSearchKeyDown} placeholder="학생 이름 검색..." />
                             {foundStudents.length > 0 && (
                                 <ul className="search-results">
                                     {foundStudents.map((s, i) => (
-                                        <li key={s.phone} className={i === highlightedIndex ? 'highlighted' : ''} onMouseDown={() => handleSelectStudent(s)}>
+                                        <li key={`${s.phone}-${s.class_name}`} onMouseDown={() => handleSelectStudent(s)} className={i === highlightedIndex ? 'highlighted' : ''}>
                                             {s.student_name} ({s.class_name})
                                         </li>
                                     ))}
                                 </ul>
                             )}
                         </div>
-                        <button type="submit">검색</button>
                     </form>
-                    {selectedStudentInfo && (
-                        <div className="selected-student-info">
-                            <p><span>이름</span>: {selectedStudentInfo.student_name}</p>
-                            <p><span>분반</span>: {selectedStudentInfo.class_name}</p>
-                            <p><span>연락처</span>: {selectedStudentInfo.phone}</p>
-                            <p><span>학교</span>: {selectedStudentInfo.school}</p>
-                        </div>
-                    )}
-                    {viewMode === 'history' && (
-                        <div className="table-wrapper">
-                            <table className="attendance-table">
-                                <thead><tr><th>날짜</th><th>분반</th><th>출결</th></tr></thead>
-                                <tbody>
-                                    {isLoading ? (<tr><td colSpan="3">기록 로딩 중...</td></tr>)
-                                        : history.length > 0 ? (history.map((record, index) => (
-                                            <tr key={index}>
-                                                <td>{new Date(record.date).toLocaleDateString()}</td>
-                                                <td>{record.class_name}</td>
-                                                <td>{record.status}</td>
-                                            </tr>
-                                        )))
-                                            : (<tr><td colSpan="3">출결 기록이 없습니다.</td></tr>)}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
                 </div>
             );
         }
@@ -237,35 +215,35 @@ const AttendancePage = () => {
                 <div className="absent-list-box">
                     <div className="absent-list-title">결석자 명단</div>
                     <div className="absent-list-content">
-                        {attendanceStats.absentStudents.length > 0 ? (
-                            attendanceStats.absentStudents.map(s => <div key={s.id} className="absent-row"><span>{s.name}</span><span>{s.phone}</span></div>)
-                        ) : (<p>결석자가 없습니다.</p>)}
+                        {attendanceStats.absent > 0 ? (
+                            attendanceStats.absentStudents.map(s => (
+                                <div key={s.id} className="absent-row"><span>{s.name}</span><span>{s.phone}</span></div>
+                            ))
+                        ) : (<p style={{ textAlign: 'center', color: '#999' }}>결석자가 없습니다.</p>)}
                     </div>
                 </div>
                 <div className="button-row">
-                    <button onClick={markAllPresent} className="all-present-btn">일괄 출석</button>
-                    <button onClick={handleSave} className="save-btn">저장</button>
+                    <button onClick={markAllPresent} className="all-present-btn">전체 출석</button>
+                    <button onClick={handleSave} className="save-btn" disabled={roster.length === 0}>저장</button>
                 </div>
             </>
         );
     };
-
     return (
         <div className="attendance-container">
             <div className="attendance-left">
+                <div className="class-controls">
+                    <select value={selectedClass} onChange={handleClassChange}>
+                        {classes.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} disabled={isAllClassesView} />
+                </div>
                 {renderLeftPanel()}
             </div>
             <div className="attendance-right">
-                <div className="class-controls">
-                    <select value={selectedClass} onChange={handleClassChange}>
-                        {classes.map((c, i) => <option key={i} value={c}>{c}</option>)}
-                    </select>
-                    <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
-                </div>
                 {renderRightPanel()}
             </div>
         </div>
     );
 };
-
 export default AttendancePage;
