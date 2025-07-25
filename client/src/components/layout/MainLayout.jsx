@@ -6,8 +6,6 @@ import RegistrationPage from '../screens/RegistrationPage';
 import AttendancePage from '../screens/AttendancePage';
 import ScoreInputPage from '../screens/ScoreInputPage';
 import ScoreInquiryPage from '../screens/ScoreInquiryPage';
-import LectureAdminPage from '../screens/LectureAdminPage';
-import WrongAnswerNotePage from '../screens/WrongAnswerNotePage';
 
 // 페이지 컴포넌트를 미리 매핑해둡니다.
 const pageComponents = {
@@ -15,8 +13,6 @@ const pageComponents = {
     attendance: <AttendancePage />,
     scores: <ScoreInputPage />,
     inquiry: <ScoreInquiryPage />,
-    materials: <LectureAdminPage />,
-    notes: <WrongAnswerNotePage />,
 };
 
 // 사이드바 메뉴 정보를 정의합니다.
@@ -25,8 +21,6 @@ const menuItems = [
     { id: 'attendance', title: '학사 관리', path: '/attendance' },
     { id: 'scores', title: '성적 입력', path: '/scores' },
     { id: 'inquiry', title: '성적 조회', path: '/inquiry' },
-    { id: 'materials', title: '강의 자료', path: '/materials'},
-    { id: 'notes', title: '오답노트', path: '/notes' },
 ];
 
 const MainLayout = () => {

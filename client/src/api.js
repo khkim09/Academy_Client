@@ -8,29 +8,4 @@ const api = axios.create({
     // timeout: 5000, 
 });
 
-// --- [신규 추가] 강의 자료 관련 API ---
-
-// 1. PDF 파일과 메타데이터 업로드
-export const uploadMaterial = (formData) => {
-    return api.post('/api/materials/upload', formData, {
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    });
-};
-
-// 2. 문항 정보(좌표, 정답 등) 저장
-export const saveQuestions = (data) => {
-    // data = { materialId: 1, questions: [...] }
-    return api.post('/api/materials/questions', data);
-};
-
-// --- [신규 추가] 오답노트 관련 API ---
-
-// 3. 학생의 오답 문항 목록 조회
-export const getIncorrectQuestions = (params) => {
-    // params = { studentPhone: '010-1234-5678', materialId: 1 }
-    return api.get('/api/notes/incorrect', { params });
-};
-
 export default api;

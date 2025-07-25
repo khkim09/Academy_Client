@@ -1,60 +1,37 @@
 .attendance-container {
     display: flex;
-    height: 100%;
-    gap: 20px;
-    padding: 20px;
-    box-sizing: border-box;
-}
-
-.attendance-left,
-.attendance-right {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    display: flex;
-    flex-direction: column;
+    height: calc(100vh - 70px);
+    background-color: #f5f8fc;
 }
 
 .attendance-left {
     flex: 3;
-    min-height: 0;
-}
-
-.attendance-right {
-    flex: 2;
-}
-
-.class-controls {
+    padding: 20px;
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.class-controls select,
-.class-controls input {
-    padding: 10px;
-    font-size: 15px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    flex: 1;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .table-wrapper {
     flex-grow: 1;
     overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
 
 .attendance-table {
     width: 100%;
     border-collapse: collapse;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .attendance-table th,
 .attendance-table td {
-    border-bottom: 1px solid #eee;
+    border: 1px solid #ddd;
     padding: 12px;
     text-align: center;
+    font-size: 15px;
 }
 
 .attendance-table th {
@@ -72,22 +49,47 @@
 }
 
 .attendance-table td input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     cursor: pointer;
+}
+
+.attendance-right {
+    flex: 2;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-left: 1px solid #e0e0e0;
+}
+
+.class-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.class-controls select,
+.class-controls input {
+    padding: 8px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex: 1;
 }
 
 .stats-row {
     display: flex;
     justify-content: space-around;
+    margin-bottom: 20px;
     text-align: center;
     background-color: #f9f9f9;
     padding: 15px;
     border-radius: 5px;
-    margin-bottom: 20px;
 }
 
 .stats-row>div {
+    flex: 1;
     font-size: 16px;
     color: #555;
 }
@@ -96,6 +98,7 @@
     font-weight: bold;
     font-size: 24px;
     margin-top: 5px;
+    color: #11476c;
 }
 
 .absent-list-box {
@@ -120,6 +123,9 @@
 .absent-list-content {
     flex: 1;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .absent-row {
@@ -135,12 +141,12 @@
 }
 
 .absent-row span:first-child {
-    font-weight: 500;
+    font-weight: bold;
 }
 
 .button-row {
     display: flex;
-    gap: 10px;
+    gap: 50px;
     margin-top: auto;
 }
 
@@ -153,23 +159,25 @@
     font-weight: bold;
     cursor: pointer;
     transition: opacity 0.2s;
-    color: white;
 }
 
-.button-row button:hover:not(:disabled) {
+.button-row button:hover {
     opacity: 0.9;
 }
 
 .excel-btn {
     background-color: #1D6F42;
+    color: white;
 }
 
 .save-btn {
     background-color: #007bff;
+    color: white;
 }
 
 .all-present-btn {
     background-color: #28a745;
+    color: white;
 }
 
 .button-row button:disabled {
@@ -178,36 +186,50 @@
 }
 
 .search-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
     height: 100%;
 }
 
 .search-panel h3 {
-    margin-top: 0;
+    margin: 0;
     border-bottom: 2px solid #11476c;
     padding-bottom: 10px;
 }
 
-.search-guide {
-    font-size: 14px;
-    color: #666;
-    background: #f0f8ff;
-    padding: 15px;
-    border-radius: 4px;
-    line-height: 1.6;
-    margin: 20px 0;
+/* [수정] form 태그를 Flexbox 컨테이너로 사용 */
+.search-panel form {
+    display: flex;
+    gap: 5px;
 }
 
 .search-input-wrapper {
     position: relative;
+    flex-grow: 1;
+    /* 입력창이 남은 공간을 모두 차지하도록 */
 }
 
 .search-panel input {
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
-    font-size: 15px;
+}
+
+/* [추가] 검색 버튼 스타일 */
+.search-panel button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.search-panel button:hover {
+    background-color: #0069d9;
 }
 
 .search-panel .search-results {
@@ -223,14 +245,14 @@
     margin: 0;
     padding: 0;
     z-index: 10;
-    max-height: 300px;
+    max-height: 250px;
     overflow-y: auto;
 }
 
 .search-panel .search-results li {
-    padding: 12px;
+    padding: 10px;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 14px;
 }
 
 .search-panel .search-results li:hover {
@@ -243,26 +265,28 @@
 }
 
 .selected-student-info {
-    margin-top: 20px;
     background: #f9f9f9;
     border: 1px solid #eee;
     padding: 15px;
     border-radius: 5px;
 }
 
-.selected-student-info h3 {
-    margin-bottom: 15px;
-    font-size: 1.2rem;
-}
-
 .selected-student-info p {
-    margin: 8px 0;
-    font-size: 15px;
+    margin: 5px 0;
+    font-size: 14px;
 }
 
 .selected-student-info p span {
-    font-weight: 500;
+    font-weight: bold;
     display: inline-block;
-    width: 70px;
-    color: #555;
+    width: 60px;
+}
+
+.search-guide {
+    font-size: 13px;
+    color: #666;
+    background: #f0f8ff;
+    padding: 10px;
+    border-radius: 4px;
+    line-height: 1.5;
 }

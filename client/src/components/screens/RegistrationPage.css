@@ -13,7 +13,7 @@
 
 .upload-section {
     max-width: 800px;
-    margin: 40px 0;
+    margin: 20px 0;
     background: white;
     padding: 25px;
     border-radius: 8px;
@@ -66,11 +66,12 @@
 }
 
 .excel-download-btn {
-    background-color: #1D6F42;
+    background-color: #e74c3c;
+    /* 눈이 아프지 않은 빨간색 계열 */
 }
 
 .excel-download-btn:hover {
-    background-color: #165934;
+    background-color: #c0392b;
 }
 
 .upload-step p {
