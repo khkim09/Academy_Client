@@ -37,7 +37,7 @@ const AttendancePage = () => {
     const fetchAttendanceData = useCallback(() => {
         if (!selectedClass || !selectedDate) return;
         setIsLoading(true);
-        api.get(`/api/attendance/classes`, { params: { class_name: selectedClass, date: selectedDate } })
+        api.get(`/api/attendance/get`, { params: { class_name: selectedClass, date: selectedDate } })
             .then(res => {
                 setRoster(res.data.map(record => ({
                     id: `${record.class_name}-${record.phone}`, name: record.student_name,
@@ -60,7 +60,7 @@ const AttendancePage = () => {
         setSearchQuery(query);
         setHighlightedIndex(-1);
         if (query.length > 0) {
-            api.get(`/api/attendance/classes`,
+            api.get(`/api/attendance/search-students`,
                 { params: { name: query } })
                 .then(res => setFoundStudents(res.data));
         } else {
